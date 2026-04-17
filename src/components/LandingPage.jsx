@@ -127,7 +127,7 @@ function DemoSection({ onBuy }) {
         <p style={{ fontSize: 15, color: '#666', maxWidth: 440, margin: '0 auto' }}>Upload a real photo. Get a real listing. One try, on us.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }} className="demo-grid">
         <div>
           <div
             style={{ border: `2px dashed ${drag ? '#9171BD' : 'rgba(145,113,189,0.3)'}`, borderRadius: 18, padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', cursor: 'pointer', minHeight: 200, background: drag ? 'rgba(145,113,189,0.05)' : '#fff', transition: 'all .2s', position: 'relative', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
@@ -272,7 +272,7 @@ export default function LandingPage({ stripeUrl }) {
           <div style={{ position: 'absolute', bottom: -80, left: -80, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(145,113,189,0.1) 0%, transparent 70%)' }} />
         </div>
 
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }} className="hero-grid">
           {/* Left — copy */}
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', border: '1.5px solid rgba(145,113,189,0.2)', borderRadius: 20, padding: '8px 18px', marginBottom: '1.5rem', boxShadow: '0 4px 12px rgba(145,113,189,0.1)' }}>
@@ -290,7 +290,7 @@ export default function LandingPage({ stripeUrl }) {
             </p>
             <p style={{ fontSize: 13, color: '#aaa', marginBottom: '2rem' }}>Etsy · Shopify · TikTok Shop · Beacons · Payhip · and more</p>
 
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: '2.5rem' }}>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: '2.5rem' }} className="btn-row">
               <button onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })} style={{ padding: '15px 32px', background: 'linear-gradient(135deg, #9171BD, #FF66C4)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: '0 6px 20px rgba(145,113,189,0.35)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 Try it free ↓
               </button>
@@ -309,50 +309,60 @@ export default function LandingPage({ stripeUrl }) {
             </div>
           </div>
 
-          {/* Right — before/after visual */}
-          <div style={{ position: 'relative' }}>
-            <div style={{ background: 'linear-gradient(135deg, #f5f0ff, #fff5fb)', borderRadius: 24, padding: '1.5rem', boxShadow: '0 20px 60px rgba(145,113,189,0.15)', border: '1.5px solid rgba(145,113,189,0.1)' }}>
-              {/* Before */}
-              <div style={{ marginBottom: '1rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <span style={{ background: '#f0f0f0', color: '#999', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>BEFORE</span>
-                  <span style={{ fontSize: 12, color: '#bbb' }}>Your original photo</span>
+          {/* Right — product showcase card */}
+          <div style={{ position: 'relative' }} className="hero-right">
+            <div style={{ background: '#fff', borderRadius: 24, padding: '1.5rem', boxShadow: '0 20px 60px rgba(145,113,189,0.15)', border: '1.5px solid rgba(145,113,189,0.1)' }}>
+
+              {/* App header mockup */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid #f0f0f0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, #9171BD, #6B4FA0)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ color: '#FF66C4', fontSize: 14, fontWeight: 900 }}>2</span>
+                  </div>
+                  <span style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 14, color: '#1a1a2e' }}>Snap<span style={{ color: '#FF66C4' }}>.</span><span style={{ color: '#9171BD' }}>List</span></span>
                 </div>
-                <div style={{ borderRadius: 14, overflow: 'hidden', background: '#f5f5f5', aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ textAlign: 'center', padding: '1.5rem' }}>
-                    <div style={{ fontSize: 40, marginBottom: 8 }}>📸</div>
-                    <p style={{ fontSize: 13, color: '#bbb', lineHeight: 1.5 }}>Any photo from your phone<br />No fancy setup needed</p>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#9171BD', background: 'rgba(145,113,189,0.1)', padding: '3px 10px', borderRadius: 20 }}>✨ Lifetime Access</span>
+              </div>
+
+              {/* Two column app layout preview */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {/* Left — product photo */}
+                <div>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: '#bbb', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 6 }}>Your Product Photo</div>
+                  <div style={{ borderRadius: 12, overflow: 'hidden', background: 'linear-gradient(135deg, #fce4f0, #e8d5f5)', aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+                    <span style={{ fontSize: 36 }}>🛍️</span>
+                  </div>
+                  <div style={{ background: 'linear-gradient(135deg, #9171BD, #FF66C4)', borderRadius: 8, padding: '8px 12px', textAlign: 'center', color: '#fff', fontSize: 11, fontWeight: 700 }}>✨ Generate Listing + Mockups</div>
+                </div>
+
+                {/* Right — listing output */}
+                <div>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: '#bbb', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 6 }}>Generated Listing</div>
+                  <div style={{ background: '#fafafa', borderRadius: 10, padding: '8px 10px', marginBottom: 6, border: '1px solid #f0f0f0' }}>
+                    <div style={{ fontSize: 9, color: '#bbb', fontWeight: 700, marginBottom: 3 }}>TITLE</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#1a1a2e', lineHeight: 1.4 }}>PCT Queen Night Shift Badge Reel | Pink Black Beaded Retractable ID Holder</div>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                    {['PCT badge reel', 'nurse gift', 'night shift', 'healthcare'].map(k => (
+                      <span key={k} style={{ fontSize: 8, fontWeight: 600, padding: '2px 6px', borderRadius: 10, background: 'rgba(145,113,189,0.1)', color: '#9171BD' }}>{k}</span>
+                    ))}
                   </div>
                 </div>
               </div>
 
-              {/* Arrow */}
-              <div style={{ textAlign: 'center', margin: '0.5rem 0', fontSize: 20 }}>✨</div>
-
-              {/* After */}
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <span style={{ background: 'linear-gradient(135deg, #9171BD, #FF66C4)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>AFTER</span>
-                  <span style={{ fontSize: 12, color: '#bbb' }}>10 AI mockups + full listing</span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 10 }}>
+              {/* Mockup grid preview */}
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: '#bbb', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 6 }}>Product Mockups (10/10)</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4 }}>
                   {[
-                    { bg: 'linear-gradient(135deg, #e8f4f8, #d0e8ff)', label: 'Studio shot', icon: '🤍' },
-                    { bg: 'linear-gradient(135deg, #fef3e8, #fde8d0)', label: 'Lifestyle', icon: '☀️' },
-                    { bg: 'linear-gradient(135deg, #f0f8e8, #e0f0d0)', label: 'Nature props', icon: '🌿' },
-                    { bg: 'linear-gradient(135deg, #f8e8f0, #f0d0e8)', label: 'Gift scene', icon: '🎁' },
-                    { bg: 'linear-gradient(135deg, #e8e8f8, #d8d0f0)', label: 'Marble flat', icon: '🤍' },
-                    { bg: 'linear-gradient(135deg, #f8f0e8, #f0e0d0)', label: 'Cozy home', icon: '🕯️' },
+                    { bg: 'linear-gradient(135deg, #f0f4ff, #e0e8ff)', icon: '🤍' },
+                    { bg: 'linear-gradient(135deg, #fff3e0, #ffe0b0)', icon: '☀️' },
+                    { bg: 'linear-gradient(135deg, #e8f5e8, #d0ecd0)', icon: '🌿' },
+                    { bg: 'linear-gradient(135deg, #fce4ec, #f8c0cc)', icon: '🎁' },
+                    { bg: 'linear-gradient(135deg, #f3e5f5, #e1bee7)', icon: '✨' },
                   ].map((m, i) => (
-                    <div key={i} style={{ borderRadius: 10, aspectRatio: '1', background: m.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                      <span style={{ fontSize: 18 }}>{m.icon}</span>
-                      <span style={{ fontSize: 9, color: '#888', fontWeight: 600 }}>{m.label}</span>
-                    </div>
+                    <div key={i} style={{ borderRadius: 8, aspectRatio: '1', background: m.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>{m.icon}</div>
                   ))}
-                </div>
-                <div style={{ background: '#fff', borderRadius: 10, padding: '10px 12px', border: '1px solid #f0f0f0' }}>
-                  <div style={{ fontSize: 10, color: '#bbb', fontWeight: 700, marginBottom: 4 }}>GENERATED TITLE</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#1a1a2e', lineHeight: 1.4 }}>Handmade PCT Queen Badge Reel | Night Shift Nurse Gift | Pink Black Beaded Retractable ID Holder</div>
                 </div>
               </div>
             </div>
@@ -388,7 +398,7 @@ export default function LandingPage({ stripeUrl }) {
       </section>
 
       {/* DEMO */}
-      <section id="demo" style={{ padding: '5rem 1.5rem', borderTop: '1px solid #f0f0f0', background: 'linear-gradient(135deg, #fff5fb 0%, #f5f0ff 100%)' }}>
+      <section id="demo" style={{ padding: '5rem 1.5rem', borderTop: '1px solid #f0f0f0', background: 'linear-gradient(135deg, #fff5fb 0%, #f5f0ff 100%)' }} className="demo-section">
         <DemoSection onBuy={() => window.open(buyUrl, '_blank')} />
       </section>
 

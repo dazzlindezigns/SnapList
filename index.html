@@ -2,21 +2,39 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="Upload a photo of your handmade product and get a complete, SEO-optimized listing in seconds. Works for Etsy, Shopify, TikTok Shop, and more. One-time $19." />
-    <meta name="theme-color" content="#1a1720" />
+    <meta name="theme-color" content="#9171BD" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="SnapList" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+
+    <!-- OG -->
     <meta property="og:title" content="SnapList — Snap. List. Sell." />
     <meta property="og:description" content="AI-powered product listings for makers and crafters. Upload a photo, get a complete listing in seconds." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://snaplist.danicreatesit.com" />
+
     <title>SnapList — Snap. List. Sell.</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {})
+        })
+      }
+    </script>
   </body>
 </html>

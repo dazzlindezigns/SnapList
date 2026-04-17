@@ -92,3 +92,153 @@ html, body, #root {
   0% { transform: scale(0.95); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
+
+/* ============================================
+   MOBILE RESPONSIVE — full optimization
+   ============================================ */
+
+@media (max-width: 768px) {
+
+  /* Landing page hero — stack vertically */
+  .hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+    padding: 3rem 1.25rem 2rem !important;
+  }
+
+  /* Hide hero right panel visual on mobile — demo is right below */
+  .hero-right {
+    display: none !important;
+  }
+
+  /* Main app workspace — stack vertically */
+  .workspace {
+    grid-template-columns: 1fr !important;
+    padding: 1rem !important;
+    gap: 1rem !important;
+  }
+
+  /* Nav padding */
+  nav {
+    padding: 0.875rem 1.25rem !important;
+  }
+
+  /* Mockup grid — 2 cols on mobile */
+  .mockup-grid-mobile {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Platform buttons — scrollable row */
+  .platform-scroll {
+    display: flex !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    padding-bottom: 4px !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+  .platform-scroll::-webkit-scrollbar { display: none; }
+  .platform-scroll button {
+    flex-shrink: 0 !important;
+  }
+
+  /* Upload zone — shorter on mobile */
+  .upload-zone-mobile {
+    min-height: 160px !important;
+    padding: 1.25rem !important;
+  }
+
+  /* Topbar — compact */
+  .topbar-mobile {
+    padding: 0.75rem 1rem !important;
+  }
+
+  /* Cards full width */
+  .card-mobile {
+    border-radius: 12px !important;
+  }
+
+  /* Font sizes */
+  h1 { font-size: clamp(2.2rem, 10vw, 4.5rem) !important; }
+  h2 { font-size: clamp(1.8rem, 7vw, 3rem) !important; }
+
+  /* How it works — 2 col on mobile */
+  .how-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Testimonials — single col */
+  .testimonial-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Pricing card */
+  .pricing-card {
+    margin: 0 !important;
+  }
+
+  /* Demo section — remove padding */
+  .demo-section {
+    padding: 3rem 1rem !important;
+  }
+
+  /* Demo grid — stack */
+  .demo-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  /* Stats row — wrap */
+  .stats-row {
+    gap: 1.5rem !important;
+  }
+
+  /* Floating badge — reposition */
+  .hero-badge {
+    top: -10px !important;
+    right: -8px !important;
+    padding: 8px 12px !important;
+    font-size: 11px !important;
+  }
+
+  /* Buttons full width on mobile */
+  .btn-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .btn-row a, .btn-row button {
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  /* Section padding */
+  section {
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Extra small phones */
+  .hero-grid {
+    padding: 2.5rem 1rem 1.5rem !important;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 12vw, 3rem) !important;
+  }
+
+  .how-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Safe area for notched phones (iPhone X+) */
+@supports (padding: max(0px)) {
+  .topbar-safe {
+    padding-top: max(1rem, env(safe-area-inset-top)) !important;
+  }
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

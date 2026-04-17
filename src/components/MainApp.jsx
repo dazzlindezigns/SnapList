@@ -89,10 +89,19 @@ export default function MainApp() {
   }
 
   const handleReset = () => {
-    setImage(null); setImageFile(null); setResult(null)
-    setMockups([]); setMockupProgress(0); setCopied({})
-    setProductDesc(''); setSkinTone('none'); setModelType('woman')
-    setScenes([...DEFAULT_SCENES]); setScenesGenerated(false)
+    setImage(null)
+    setImageFile(null)
+    setResult(null)
+    setMockups([])
+    setMockupProgress(0)
+    setCopied({})
+    setProductDesc('')
+    setSkinTone('none')
+    setModelType('woman')
+    setScenes([...DEFAULT_SCENES])
+    setScenesGenerated(false)
+    setListingLoading(false)
+    setMockupLoading(false)
     if (fileRef.current) fileRef.current.value = ''
   }
 
@@ -165,20 +174,21 @@ export default function MainApp() {
     setListingLoading(false)
   }
 
-  const generateMockups = async () => {
+  const generateMockups = async (append = false) => {
     if (!imageFile) return
     setMockupLoading(true)
-    setMockups([])
+    if (!append) setMockups([])
     setMockupProgress(0)
 
     const b64 = await toBase64(imageFile)
-    const generated = []
+    const newMockups = []
     const BATCH_SIZE = 3
+    const shuffled = [...DEFAULT_SCENES].sort(() => Math.random() - 0.5)
 
-    for (let i = 0; i < scenes.length; i += BATCH_SIZE) {
-      const batch = scenes.slice(i, i + BATCH_SIZE)
+    for (let i = 0; i < shuffled.length; i += BATCH_SIZE) {
+      const batch = shuffled.slice(i, i + BATCH_SIZE)
       const results = await Promise.allSettled(
-        batch.map(async (promptText, j) => {
+        batch.map(async (promptText) => {
           const skinInstruction = skinTone !== 'none'
             ? ` Include a ${skinTone} ${modelType} naturally interacting with or using the product.`
             : ''
@@ -196,14 +206,13 @@ export default function MainApp() {
           return null
         })
       )
-
-      results.forEach(r => {
-        if (r.status === 'fulfilled' && r.value) {
-          generated.push(r.value)
-        }
-      })
-      setMockups([...generated])
-      setMockupProgress(Math.min(i + BATCH_SIZE, MOCKUP_PROMPTS.length))
+      results.forEach(r => { if (r.status === 'fulfilled' && r.value) newMockups.push(r.value) })
+      if (append) {
+        setMockups(prev => [...prev, ...newMockups.slice(newMockups.length - results.filter(r => r.status === 'fulfilled' && r.value).length)])
+      } else {
+        setMockups([...newMockups])
+      }
+      setMockupProgress(Math.min(i + BATCH_SIZE, shuffled.length))
     }
     setMockupLoading(false)
   }
@@ -286,7 +295,7 @@ export default function MainApp() {
 
   return (
     <div>
-      <div style={s.topbar}>
+      <div className="topbar-mobile topbar-safe" style={s.topbar}>
         <Logo size={32} fontSize={20} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{
@@ -299,7 +308,7 @@ export default function MainApp() {
         </div>
       </div>
 
-      <div className="workspace" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', maxWidth: 1200, margin: '0 auto', padding: '2rem' }}>
+      <div className="workspace" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', maxWidth: 1200, margin: '0 auto', padding: '2rem', background: '#FAFAFA', minHeight: 'calc(100vh - 60px)' }}> gap: '2rem', maxWidth: 1200, margin: '0 auto', padding: '2rem' }}>
         {/* LEFT PANEL */}
         <div>
           <p style={s.secLabel}>Your Product Photo</p>
@@ -333,40 +342,14 @@ export default function MainApp() {
               {/* Product description */}
               <div style={{ marginBottom: '1.25rem' }}>
                 <p style={s.secLabel}>What is this product? <span style={{ color: '#bbb', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional — helps AI & mockups)</span></p>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <textarea
-                    value={productDesc}
-                    onChange={e => { setProductDesc(e.target.value); setScenesGenerated(false) }}
-                    placeholder="e.g. baby shower gift basket, pink strawberry theme, for a Black baby girl..."
-                    rows={2}
-                    style={{ flex: 1, background: '#fff', border: '1.5px solid rgba(145,113,189,0.2)', borderRadius: 10, padding: '10px 14px', color: '#1a1a2e', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, outline: 'none', resize: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
-                  />
-                </div>
-                {productDesc.trim() && (
-                  <button onClick={generateScenes} disabled={scenesLoading} style={{ marginTop: 8, padding: '7px 16px', background: scenesGenerated ? '#f0fff4' : 'linear-gradient(135deg, rgba(145,113,189,0.12), rgba(255,102,196,0.08))', border: scenesGenerated ? '1.5px solid #86efac' : '1.5px solid rgba(145,113,189,0.25)', borderRadius: 8, color: scenesGenerated ? '#166534' : '#9171BD', fontSize: 12, fontWeight: 700, cursor: scenesLoading ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {scenesLoading ? <><span className="spinner-dark" style={{ width: 12, height: 12 }} />Generating scenes...</> : scenesGenerated ? '✅ Scenes customized!' : '🎬 Generate smart scenes for this product'}
-                  </button>
-                )}
+                <textarea
+                  value={productDesc}
+                  onChange={e => setProductDesc(e.target.value)}
+                  placeholder="e.g. baby shower gift basket, pink strawberry theme, for a Black baby girl..."
+                  rows={2}
+                  style={{ width: '100%', background: '#fff', border: '1.5px solid rgba(145,113,189,0.2)', borderRadius: 10, padding: '10px 14px', color: '#1a1a2e', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, outline: 'none', resize: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+                />
               </div>
-
-              {/* Scene editor */}
-              {scenesGenerated && (
-                <div style={{ marginBottom: '1.25rem' }}>
-                  <p style={s.secLabel}>Mockup scenes <span style={{ color: '#bbb', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(edit any scene)</span></p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 220, overflowY: 'auto', paddingRight: 4 }}>
-                    {scenes.map((scene, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontSize: 11, color: '#bbb', fontWeight: 700, minWidth: 16 }}>{i + 1}</span>
-                        <input
-                          value={scene}
-                          onChange={e => { const updated = [...scenes]; updated[i] = e.target.value; setScenes(updated) }}
-                          style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1.5px solid #e8e8e8', fontSize: 12, color: '#1a1a2e', fontFamily: "'Plus Jakarta Sans', sans-serif", outline: 'none', background: '#fff' }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {/* Model selector */}
               <div style={{ marginBottom: '1.25rem' }}>
@@ -419,18 +402,16 @@ export default function MainApp() {
                 )}
               </button>
 
-              {/* Reset button */}
-              {(result || mockups.length > 0) && (
-                <button onClick={handleReset} style={{
-                  width: '100%', marginTop: 10, padding: '11px 24px',
-                  background: 'transparent', border: '1.5px solid #e8e8e8',
-                  borderRadius: 12, color: '#999',
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all .15s'
-                }}>
-                  🔄 Start a new listing
-                </button>
-              )}
+              {/* Reset button — always visible once image is uploaded */}
+              <button onClick={handleReset} style={{
+                width: '100%', marginTop: 10, padding: '11px 24px',
+                background: 'transparent', border: '1.5px solid #e8e8e8',
+                borderRadius: 12, color: '#999',
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all .15s'
+              }}>
+                🔄 Start a new listing
+              </button>
             </div>
           )}
 
@@ -454,6 +435,21 @@ export default function MainApp() {
                   </div>
                 ))}
               </div>
+
+              {/* Generate more button — shows after mockups finish */}
+              {!mockupLoading && mockups.length > 0 && (
+                <button onClick={() => generateMockups(true)} style={{
+                  width: '100%', marginTop: 12, padding: '11px 24px',
+                  background: 'linear-gradient(135deg, rgba(145,113,189,0.1), rgba(255,102,196,0.08))',
+                  border: '1.5px solid rgba(145,113,189,0.25)',
+                  borderRadius: 12, color: '#9171BD',
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all .15s',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+                }}>
+                  🖼️ Generate 10 more mockups
+                </button>
+              )}
             </div>
           )}
         </div>
