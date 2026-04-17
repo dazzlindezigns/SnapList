@@ -52,6 +52,19 @@ function LogoIcon({ size = 32 }) {
 }
 
 function DemoSection({ onBuy }) {
+  const DEMO_COOKIE = 'snaplist_demo_used'
+
+  const hasDemoBeenUsed = () => {
+    return document.cookie.split(';').some(c => c.trim().startsWith(`${DEMO_COOKIE}=`))
+  }
+
+  const markDemoUsed = () => {
+    // Expires in 30 days
+    const exp = new Date()
+    exp.setDate(exp.getDate() + 30)
+    document.cookie = `${DEMO_COOKIE}=1; expires=${exp.toUTCString()}; path=/`
+  }
+
   const [image, setImage] = useState(null)
   const [imageFile, setImageFile] = useState(null)
   const [platform, setPlatform] = useState('Etsy')
@@ -60,7 +73,7 @@ function DemoSection({ onBuy }) {
   const [result, setResult] = useState(null)
   const [mockups, setMockups] = useState([])
   const [mockupLoading, setMockupLoading] = useState(false)
-  const [used, setUsed] = useState(false)
+  const [used, setUsed] = useState(() => hasDemoBeenUsed())
   const fileRef = useRef()
 
   const DEMO_MOCKUP_PROMPTS = [
@@ -157,6 +170,7 @@ function DemoSection({ onBuy }) {
       if (!parsed) throw new Error('Could not parse response — please try again')
       setResult(parsed)
       setUsed(true)
+      markDemoUsed()
       // Generate 2 demo mockups after listing — pass the b64 image
       generateMockups(parsed.title || 'handmade product', b64)
     } catch (err) {
@@ -205,6 +219,29 @@ function DemoSection({ onBuy }) {
               </>
             )}
           </div>
+
+          {/* Demo already used — show upsell */}
+          {used && !result && (
+            <div style={{
+              marginTop: '1.5rem',
+              background: 'linear-gradient(135deg, rgba(145,113,189,0.15), rgba(255,102,196,0.1))',
+              border: '1px solid rgba(145,113,189,0.3)',
+              borderRadius: 14, padding: '1.5rem', textAlign: 'center'
+            }}>
+              <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 8 }}>You've used your free demo ✦</p>
+              <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Ready for unlimited access?</p>
+              <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16, lineHeight: 1.6 }}>
+                Unlimited listings · 10 AI mockups per product · All platforms · $19 once, yours forever.
+              </p>
+              <a href={buyUrl} target="_blank" rel="noopener noreferrer" style={{
+                display: 'block', width: '100%', padding: '14px 24px',
+                background: 'linear-gradient(135deg, var(--purple), var(--pink))',
+                color: '#fff', border: 'none', borderRadius: 12,
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontSize: 15, fontWeight: 600, textDecoration: 'none', textAlign: 'center'
+              }}>Get Lifetime Access — $19</a>
+            </div>
+          )}
 
           {image && !used && (
             <div style={{ marginTop: '1rem' }}>

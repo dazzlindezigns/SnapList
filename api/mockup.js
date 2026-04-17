@@ -20,19 +20,25 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{
             parts: [
-              { text: prompt },
-              { inline_data: { mime_type: mimeType, data: imageBase64 } }
+              {
+                text: `Generate a photorealistic product mockup image. ${prompt} Use the provided product image as the exact product to place in the scene. Output only the image, no text.`
+              },
+              {
+                inline_data: { mime_type: mimeType, data: imageBase64 }
+              }
             ]
           }],
           generationConfig: {
-            responseModalities: ['IMAGE', 'TEXT']
+            responseModalities: ['IMAGE', 'TEXT'],
+            temperature: 1,
+            topP: 0.95
           }
         })
       }
@@ -40,14 +46,9 @@ export default async function handler(req, res) {
 
     const data = await response.json()
     console.log('Gemini status:', response.status)
-    console.log('Gemini parts:', JSON.stringify(data.candidates?.[0]?.content?.parts?.map(p => ({
-      hasText: !!p.text,
-      hasImage: !!p.inline_data,
-      textPreview: p.text?.slice(0, 100)
-    }))))
 
     if (!response.ok) {
-      console.error('Gemini error:', JSON.stringify(data))
+      console.error('Gemini error:', JSON.stringify(data).slice(0, 300))
       return res.status(response.status).json({ error: data.error?.message || 'Gemini API error' })
     }
 
@@ -55,9 +56,8 @@ export default async function handler(req, res) {
     const imagePart = parts.find(p => p.inline_data?.data)
 
     if (!imagePart) {
-      // Log what we got instead
       const textPart = parts.find(p => p.text)
-      console.error('No image — got text instead:', textPart?.text?.slice(0, 200))
+      console.error('No image — got text:', textPart?.text?.slice(0, 150))
       return res.status(500).json({ error: 'No image generated', detail: textPart?.text?.slice(0, 100) })
     }
 
