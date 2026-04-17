@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 
-const STRIPE_URL = 'https://buy.stripe.com/PLACEHOLDER'
+const STRIPE_URL = 'https://buy.stripe.com/cNi8wO2Y69Zz3MTcbEa3u05'
 
 const BG = {
   position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
