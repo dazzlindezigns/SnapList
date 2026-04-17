@@ -272,7 +272,7 @@ export default function LandingPage({ stripeUrl }) {
           <div style={{ position: 'absolute', bottom: -80, left: -80, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(145,113,189,0.1) 0%, transparent 70%)' }} />
         </div>
 
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }} className="hero-grid">
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'start' }} className="hero-grid">
           {/* Left — copy */}
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', border: '1.5px solid rgba(145,113,189,0.2)', borderRadius: 20, padding: '8px 18px', marginBottom: '1.5rem', boxShadow: '0 4px 12px rgba(145,113,189,0.1)' }}>
@@ -309,34 +309,76 @@ export default function LandingPage({ stripeUrl }) {
             </div>
           </div>
 
-          {/* Right — real product showcase */}
+          {/* Right — Image 2 style card */}
           <div style={{ position: 'relative' }} className="hero-right">
-            <div style={{ background: '#fff', borderRadius: 24, padding: '1.25rem', boxShadow: '0 20px 60px rgba(145,113,189,0.15)', border: '1.5px solid rgba(145,113,189,0.1)' }}>
-
-              {/* Before: product photo */}
-              <div style={{ marginBottom: '0.75rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <span style={{ background: '#f0f0f0', color: '#999', fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>YOUR PHOTO</span>
-                </div>
-                <img src="/hero-product.png" alt="Product photo" style={{ width: '100%', borderRadius: 14, objectFit: 'cover', maxHeight: 160 }} />
-              </div>
-
-              {/* Arrow */}
-              <div style={{ textAlign: 'center', margin: '0.5rem 0', fontSize: 18 }}>✨</div>
-
-              {/* After: mockups */}
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <span style={{ background: 'linear-gradient(135deg, #9171BD, #FF66C4)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>10 AI MOCKUPS</span>
-                  <span style={{ fontSize: 11, color: '#bbb' }}>+ full listing</span>
-                </div>
-                <img src="/hero-mockups.png" alt="AI Mockups" style={{ width: '100%', borderRadius: 14, objectFit: 'cover' }} />
-              </div>
+            {/* Floating badge */}
+            <div style={{ position: 'absolute', top: -16, right: -16, zIndex: 2, background: 'linear-gradient(135deg, #FF66C4, #9171BD)', color: '#fff', borderRadius: 16, padding: '10px 16px', fontSize: 12, fontWeight: 700, boxShadow: '0 8px 20px rgba(255,102,196,0.4)', textAlign: 'center' }}>
+              ✨ 30 seconds<br /><span style={{ fontSize: 10, opacity: 0.9 }}>start to finish</span>
             </div>
 
-            {/* Floating badge */}
-            <div style={{ position: 'absolute', top: -16, right: -16, background: 'linear-gradient(135deg, #FF66C4, #9171BD)', color: '#fff', borderRadius: 16, padding: '10px 16px', fontSize: 12, fontWeight: 700, boxShadow: '0 8px 20px rgba(255,102,196,0.4)', textAlign: 'center' }}>
-              ✨ 30 seconds<br /><span style={{ fontSize: 10, opacity: 0.9 }}>start to finish</span>
+            <div style={{ background: '#fff', borderRadius: 24, padding: '1.5rem', boxShadow: '0 20px 60px rgba(145,113,189,0.15)', border: '1.5px solid rgba(145,113,189,0.1)' }}>
+
+              {/* Header row */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, #9171BD, #FF66C4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <LogoIcon size={18} />
+                  </div>
+                  <span style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 15, color: '#1a1a2e' }}>Snap<span style={{ color: '#FF66C4' }}>.</span><span style={{ color: '#9171BD' }}>List</span></span>
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#9171BD', background: 'rgba(145,113,189,0.1)', padding: '4px 12px', borderRadius: 20 }}>✨ Lifetime Access</span>
+              </div>
+
+              {/* Two column: photo + listing */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                {/* Product photo */}
+                <div>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#bbb', marginBottom: 6 }}>Your Product Photo</div>
+                  <div style={{ borderRadius: 14, overflow: 'hidden', aspectRatio: '1', background: '#f5f0ff' }}>
+                    <img src="/hero-product.png" alt="Product" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  <button style={{ width: '100%', marginTop: 10, padding: '10px', background: 'linear-gradient(135deg, #9171BD, #FF66C4)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                    ✨ Generate Listing + Mockups
+                  </button>
+                </div>
+
+                {/* Generated listing */}
+                <div>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#bbb', marginBottom: 6 }}>Generated Listing</div>
+                  <div style={{ background: '#fafafa', border: '1.5px solid #f0f0f0', borderRadius: 12, padding: '10px', marginBottom: 8 }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: '#bbb', marginBottom: 4 }}>Title</div>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: '#1a1a2e', lineHeight: 1.4, margin: 0 }}>Heart Keychain Set · Candy Color Valentine Bag Charm</p>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {['keychain gift', 'valentine', 'heart charm', 'cute bag tag'].map(k => (
+                      <span key={k} style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 12, background: 'rgba(145,113,189,0.1)', color: '#7c5cbf', border: '1px solid rgba(145,113,189,0.15)' }}>{k}</span>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: '#FF66C4' }}>$12–$18</span>
+                    <span style={{ fontSize: 9, color: '#bbb' }}>suggested price</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mockups row */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <span style={{ background: 'linear-gradient(135deg, #9171BD, #FF66C4)', color: '#fff', fontSize: 9, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>PRODUCT MOCKUPS (10/10)</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+                  {[
+                    { src: '/hero-mockups.png', style: {} },
+                    { src: '/hero-product.png', style: { filter: 'brightness(1.05) saturate(1.1)' } },
+                    { src: '/hero-mockups.png', style: { filter: 'hue-rotate(20deg) saturate(1.2)', objectPosition: 'right center' } },
+                    { src: '/hero-product.png', style: { filter: 'brightness(0.7) contrast(1.1)', objectPosition: 'center top' } },
+                  ].map((m, i) => (
+                    <div key={i} style={{ borderRadius: 10, overflow: 'hidden', aspectRatio: '1', background: '#f5f0ff' }}>
+                      <img src={m.src} alt={`Mockup ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', ...m.style }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
