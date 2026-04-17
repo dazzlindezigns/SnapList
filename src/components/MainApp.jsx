@@ -117,7 +117,7 @@ export default function MainApp() {
     const img = new Image()
     img.onload = () => {
       const canvas = document.createElement('canvas')
-      const MAX = 1024
+      const MAX = 800  // smaller for mobile camera photos
       let w = img.width, h = img.height
       if (w > MAX || h > MAX) {
         if (w > h) { h = Math.round(h * MAX / w); w = MAX }
@@ -125,7 +125,7 @@ export default function MainApp() {
       }
       canvas.width = w; canvas.height = h
       canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-      res(canvas.toDataURL('image/jpeg', 0.85).split(',')[1])
+      res(canvas.toDataURL('image/jpeg', 0.75).split(',')[1])  // 0.75 quality = smaller payload
     }
     img.onerror = rej
     img.src = URL.createObjectURL(file)

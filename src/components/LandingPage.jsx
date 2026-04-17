@@ -309,61 +309,28 @@ export default function LandingPage({ stripeUrl }) {
             </div>
           </div>
 
-          {/* Right — product showcase card */}
+          {/* Right — real product showcase */}
           <div style={{ position: 'relative' }} className="hero-right">
-            <div style={{ background: '#fff', borderRadius: 24, padding: '1.5rem', boxShadow: '0 20px 60px rgba(145,113,189,0.15)', border: '1.5px solid rgba(145,113,189,0.1)' }}>
+            <div style={{ background: '#fff', borderRadius: 24, padding: '1.25rem', boxShadow: '0 20px 60px rgba(145,113,189,0.15)', border: '1.5px solid rgba(145,113,189,0.1)' }}>
 
-              {/* App header mockup */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid #f0f0f0' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, #9171BD, #6B4FA0)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ color: '#FF66C4', fontSize: 14, fontWeight: 900 }}>2</span>
-                  </div>
-                  <span style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 14, color: '#1a1a2e' }}>Snap<span style={{ color: '#FF66C4' }}>.</span><span style={{ color: '#9171BD' }}>List</span></span>
+              {/* Before: product photo */}
+              <div style={{ marginBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <span style={{ background: '#f0f0f0', color: '#999', fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>YOUR PHOTO</span>
                 </div>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#9171BD', background: 'rgba(145,113,189,0.1)', padding: '3px 10px', borderRadius: 20 }}>✨ Lifetime Access</span>
+                <img src="/hero-product.png" alt="Product photo" style={{ width: '100%', borderRadius: 14, objectFit: 'cover', maxHeight: 160 }} />
               </div>
 
-              {/* Two column app layout preview */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                {/* Left — product photo */}
-                <div>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: '#bbb', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 6 }}>Your Product Photo</div>
-                  <div style={{ borderRadius: 12, overflow: 'hidden', background: 'linear-gradient(135deg, #fce4f0, #e8d5f5)', aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
-                    <span style={{ fontSize: 36 }}>🛍️</span>
-                  </div>
-                  <div style={{ background: 'linear-gradient(135deg, #9171BD, #FF66C4)', borderRadius: 8, padding: '8px 12px', textAlign: 'center', color: '#fff', fontSize: 11, fontWeight: 700 }}>✨ Generate Listing + Mockups</div>
-                </div>
+              {/* Arrow */}
+              <div style={{ textAlign: 'center', margin: '0.5rem 0', fontSize: 18 }}>✨</div>
 
-                {/* Right — listing output */}
-                <div>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: '#bbb', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 6 }}>Generated Listing</div>
-                  <div style={{ background: '#fafafa', borderRadius: 10, padding: '8px 10px', marginBottom: 6, border: '1px solid #f0f0f0' }}>
-                    <div style={{ fontSize: 9, color: '#bbb', fontWeight: 700, marginBottom: 3 }}>TITLE</div>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: '#1a1a2e', lineHeight: 1.4 }}>PCT Queen Night Shift Badge Reel | Pink Black Beaded Retractable ID Holder</div>
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                    {['PCT badge reel', 'nurse gift', 'night shift', 'healthcare'].map(k => (
-                      <span key={k} style={{ fontSize: 8, fontWeight: 600, padding: '2px 6px', borderRadius: 10, background: 'rgba(145,113,189,0.1)', color: '#9171BD' }}>{k}</span>
-                    ))}
-                  </div>
+              {/* After: mockups */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <span style={{ background: 'linear-gradient(135deg, #9171BD, #FF66C4)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>10 AI MOCKUPS</span>
+                  <span style={{ fontSize: 11, color: '#bbb' }}>+ full listing</span>
                 </div>
-              </div>
-
-              {/* Mockup grid preview */}
-              <div style={{ marginTop: 12 }}>
-                <div style={{ fontSize: 9, fontWeight: 700, color: '#bbb', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 6 }}>Product Mockups (10/10)</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4 }}>
-                  {[
-                    { bg: 'linear-gradient(135deg, #f0f4ff, #e0e8ff)', icon: '🤍' },
-                    { bg: 'linear-gradient(135deg, #fff3e0, #ffe0b0)', icon: '☀️' },
-                    { bg: 'linear-gradient(135deg, #e8f5e8, #d0ecd0)', icon: '🌿' },
-                    { bg: 'linear-gradient(135deg, #fce4ec, #f8c0cc)', icon: '🎁' },
-                    { bg: 'linear-gradient(135deg, #f3e5f5, #e1bee7)', icon: '✨' },
-                  ].map((m, i) => (
-                    <div key={i} style={{ borderRadius: 8, aspectRatio: '1', background: m.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>{m.icon}</div>
-                  ))}
-                </div>
+                <img src="/hero-mockups.png" alt="AI Mockups" style={{ width: '100%', borderRadius: 14, objectFit: 'cover' }} />
               </div>
             </div>
 
