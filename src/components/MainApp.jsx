@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Logo } from './Logo'
 
-const PLATFORMS = ['Etsy', 'Shopify', 'Amazon Handmade', 'Own Website', 'Facebook Shop']
+const PLATFORMS = ['Etsy', 'Shopify', 'Amazon Handmade', 'Own Website', 'Payhip', 'Beacons', 'TikTok Shop', 'Facebook Shop']
 
 const MOCKUP_PROMPTS = [
   'professional product photo on clean white background, studio lighting, e-commerce style',
@@ -118,6 +118,7 @@ export default function MainApp() {
           body: JSON.stringify({ prompt, imageBase64: b64, mimeType: 'image/jpeg' })
         })
         const data = await res.json()
+        console.log(`Mockup ${i+1} response:`, data.b64 ? 'got image' : data.error || 'no image')
         if (data.b64) {
           const url = `data:${data.mimeType || 'image/png'};base64,${data.b64}`
           generated.push({ url, label: MOCKUP_PROMPTS[i].split(',')[0] })
@@ -216,7 +217,7 @@ export default function MainApp() {
         </div>
       </div>
 
-      <div style={s.workspace}>
+      <div className="workspace" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', maxWidth: 1200, margin: '0 auto', padding: '2rem' }}>
         {/* LEFT PANEL */}
         <div>
           <p style={s.secLabel}>Your Product Photo</p>
@@ -260,34 +261,25 @@ export default function MainApp() {
                 ))}
               </div>
 
-              {/* Generate Listing */}
-              <button onClick={generateListing} disabled={listingLoading} style={{
-                width: '100%', padding: '15px 24px', marginBottom: 10,
+              {/* Single Generate Button — triggers both listing + mockups */}
+              <button onClick={() => { generateListing(); generateMockups() }} 
+                disabled={listingLoading || mockupLoading} style={{
+                width: '100%', padding: '15px 24px',
                 background: 'linear-gradient(135deg, var(--purple), var(--pink))',
                 color: '#fff', border: 'none', borderRadius: 14,
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontSize: 15, fontWeight: 600, cursor: listingLoading ? 'not-allowed' : 'pointer',
-                opacity: listingLoading ? 0.5 : 1, transition: 'all .2s',
+                fontSize: 15, fontWeight: 600, 
+                cursor: (listingLoading || mockupLoading) ? 'not-allowed' : 'pointer',
+                opacity: (listingLoading || mockupLoading) ? 0.5 : 1, transition: 'all .2s',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10
               }}>
-                {listingLoading ? <><span className="spinner" />Analyzing your product...</> : <>✦ Generate Listing</>}
-              </button>
-
-              {/* Generate Mockups */}
-              <button onClick={generateMockups} disabled={mockupLoading} style={{
-                width: '100%', padding: '13px 24px',
-                background: 'transparent',
-                color: 'var(--blue)', border: '1px solid rgba(56,182,255,0.3)',
-                borderRadius: 14,
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontSize: 14, fontWeight: 600, cursor: mockupLoading ? 'not-allowed' : 'pointer',
-                opacity: mockupLoading ? 0.5 : 1, transition: 'all .2s',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10
-              }}>
-                {mockupLoading
-                  ? <><span className="spinner" style={{ borderTopColor: 'var(--blue)', borderColor: 'rgba(56,182,255,0.2)' }} />
-                    Generating mockups ({mockupProgress}/10)...</>
-                  : <>✦ Generate 10 Mockups</>}
+                {listingLoading ? (
+                  <><span className="spinner" />Generating listing...</>
+                ) : mockupLoading ? (
+                  <><span className="spinner" />Generating mockups ({mockupProgress}/10)...</>
+                ) : (
+                  <>✦ Generate Listing + Mockups</>
+                )}
               </button>
             </div>
           )}
@@ -401,7 +393,11 @@ export default function MainApp() {
       {/* Mobile responsive */}
       <style>{`
         @media (max-width: 780px) {
-          .workspace { grid-template-columns: 1fr !important; padding: 1.25rem !important; }
+          .workspace { 
+            grid-template-columns: 1fr !important; 
+            padding: 1rem !important;
+            gap: 1rem !important;
+          }
         }
       `}</style>
     </div>
