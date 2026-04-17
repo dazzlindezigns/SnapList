@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const STRIPE_URL = import.meta.env.VITE_STRIPE_URL || 'https://buy.stripe.com/PLACEHOLDER'
 
@@ -297,7 +298,8 @@ function DemoSection({ onBuy }) {
   )
 }
 
-export default function LandingPage({ onLogin, stripeUrl }) {
+export default function LandingPage({ stripeUrl }) {
+  const navigate = useNavigate()
   const buyUrl = stripeUrl || STRIPE_URL
 
   return (
@@ -323,7 +325,7 @@ export default function LandingPage({ onLogin, stripeUrl }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <a href={buyUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: 'var(--muted)', textDecoration: 'none', padding: '8px 16px' }}>Get access — $19</a>
-          <button onClick={onLogin} style={{ padding: '8px 20px', borderRadius: 10, background: 'transparent', border: '1px solid rgba(145,113,189,0.4)', color: 'var(--purple)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <button onClick={() => navigate('/login')} style={{ padding: '8px 20px', borderRadius: 10, background: 'transparent', border: '1px solid rgba(145,113,189,0.4)', color: 'var(--purple)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             Log in
           </button>
         </div>

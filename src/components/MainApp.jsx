@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Logo } from './Logo'
 
@@ -17,7 +18,8 @@ const MOCKUP_PROMPTS = [
   'dark moody aesthetic, product on dark slate with dramatic side lighting',
 ]
 
-export default function MainApp({ user, onSignOut }) {
+export default function MainApp() {
+  const navigate = useNavigate()
   const [image, setImage] = useState(null)
   const [imageFile, setImageFile] = useState(null)
   const [platform, setPlatform] = useState('Etsy')
@@ -203,7 +205,7 @@ export default function MainApp({ user, onSignOut }) {
             background: 'rgba(145,113,189,0.15)', color: 'var(--purple)',
             border: '1px solid rgba(145,113,189,0.3)', padding: '4px 12px', borderRadius: 20
           }}>Lifetime Access</span>
-          <button style={s.signout} onClick={onSignOut}>Sign out</button>
+          <button style={s.signout} onClick={async () => { await supabase.auth.signOut(); navigate('/') }}>Sign out</button>
         </div>
       </div>
 

@@ -6,7 +6,7 @@
     { "source": "/api/generate", "destination": "/api/generate" },
     { "source": "/api/mockup", "destination": "/api/mockup" },
     { "source": "/api/webhook", "destination": "/api/webhook" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "functions": {
     "api/*.js": {

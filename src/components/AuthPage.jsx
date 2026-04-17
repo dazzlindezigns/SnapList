@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Logo } from './Logo'
 
@@ -20,7 +21,8 @@ const DOTS = {
   WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)'
 }
 
-export default function AuthPage({ onAuth, onBack, defaultMode = 'login' }) {
+export default function AuthPage({ defaultMode = 'login' }) {
+  const navigate = useNavigate()
   const [mode, setMode] = useState(defaultMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -28,14 +30,13 @@ export default function AuthPage({ onAuth, onBack, defaultMode = 'login' }) {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  const reset = () => { setError(''); setSuccess(''); }
+  const reset = () => { setError(''); setSuccess('') }
 
   const handleLogin = async () => {
     setLoading(true); reset()
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) { setError(error.message); setLoading(false); return }
 
-    // Check paid status
     const { data: profile } = await supabase
       .from('profiles')
       .select('is_paid')
@@ -44,17 +45,20 @@ export default function AuthPage({ onAuth, onBack, defaultMode = 'login' }) {
 
     if (!profile?.is_paid) {
       await supabase.auth.signOut()
-      setError("No active purchase found for this account. Please purchase access first.")
+      setError("No active purchase found. Please purchase access first.")
       setLoading(false); return
     }
 
-    onAuth(data.user)
+    navigate('/app')
     setLoading(false)
   }
 
   const handleSignup = async () => {
     setLoading(true); reset()
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { error } = await supabase.auth.signUp({
+      email, password,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` }
+    })
     if (error) { setError(error.message); setLoading(false); return }
     setSuccess("Check your email for a confirmation link! Once confirmed, come back and log in.")
     setLoading(false)
@@ -63,7 +67,7 @@ export default function AuthPage({ onAuth, onBack, defaultMode = 'login' }) {
   const handleForgot = async () => {
     setLoading(true); reset()
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`
+      redirectTo: `${window.location.origin}/auth/callback`
     })
     if (error) { setError(error.message); setLoading(false); return }
     setSuccess("Password reset email sent! Check your inbox.")
@@ -78,22 +82,12 @@ export default function AuthPage({ onAuth, onBack, defaultMode = 'login' }) {
       <div style={DOTS} />
 
       <div className="fade-up" style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 420 }}>
-        {/* Logo */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem', cursor: 'pointer' }} onClick={() => navigate('/')}>
           <Logo size={44} fontSize={26} />
         </div>
 
-        {/* Card */}
-        <div style={{
-          background: 'rgba(145,113,189,0.08)',
-          border: '1px solid rgba(145,113,189,0.25)',
-          borderRadius: 20, padding: '2rem'
-        }}>
-          <h2 style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: 24, fontWeight: 900,
-            marginBottom: 6, color: 'var(--text)'
-          }}>
+        <div style={{ background: 'rgba(145,113,189,0.08)', border: '1px solid rgba(145,113,189,0.25)', borderRadius: 20, padding: '2rem' }}>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 900, marginBottom: 6, color: 'var(--text)' }}>
             {mode === 'login' ? 'Welcome back' : mode === 'signup' ? 'Create your account' : 'Reset your password'}
           </h2>
           <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: '1.5rem', lineHeight: 1.6 }}>
@@ -103,11 +97,9 @@ export default function AuthPage({ onAuth, onBack, defaultMode = 'login' }) {
           </p>
 
           {success ? (
-            <div style={{
-              background: 'rgba(56,182,255,0.1)', border: '1px solid rgba(56,182,255,0.25)',
-              borderRadius: 10, padding: '1rem', fontSize: 14,
-              color: '#90d8ff', lineHeight: 1.6, marginBottom: '1rem'
-            }}>{success}</div>
+            <div style={{ background: 'rgba(56,182,255,0.1)', border: '1px solid rgba(56,182,255,0.25)', borderRadius: 10, padding: '1rem', fontSize: 14, color: '#90d8ff', lineHeight: 1.6, marginBottom: '1rem' }}>
+              {success}
+            </div>
           ) : (
             <>
               <div className="input-group">
@@ -136,44 +128,32 @@ export default function AuthPage({ onAuth, onBack, defaultMode = 'login' }) {
             </>
           )}
 
-          {/* Mode switchers */}
           <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
             {mode === 'login' && <>
-              <button className="btn-ghost" onClick={() => { setMode('forgot'); reset() }}>
-                Forgot your password?
-              </button>
-              <button className="btn-ghost" onClick={() => { setMode('signup'); reset() }}>
-                New here? Create an account
-              </button>
+              <button className="btn-ghost" onClick={() => { setMode('forgot'); reset() }}>Forgot your password?</button>
+              <button className="btn-ghost" onClick={() => { setMode('signup'); reset() }}>New here? Create an account</button>
             </>}
             {mode === 'signup' && (
-              <button className="btn-ghost" onClick={() => { setMode('login'); reset() }}>
-                Already have an account? Log in
-              </button>
+              <button className="btn-ghost" onClick={() => { setMode('login'); reset() }}>Already have an account? Log in</button>
             )}
             {mode === 'forgot' && (
-              <button className="btn-ghost" onClick={() => { setMode('login'); reset() }}>
-                Back to login
-              </button>
+              <button className="btn-ghost" onClick={() => { setMode('login'); reset() }}>Back to login</button>
             )}
           </div>
         </div>
 
-        {/* Purchase link */}
         <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--faint)', marginTop: 20 }}>
           Don't have access yet?{' '}
-          <a href={import.meta.env.VITE_STRIPE_URL || 'https://buy.stripe.com/PLACEHOLDER'} target="_blank" rel="noopener noreferrer"
+          <a href={import.meta.env.VITE_STRIPE_URL} target="_blank" rel="noopener noreferrer"
             style={{ color: 'var(--purple)', textDecoration: 'none' }}>
             Get lifetime access — $19
           </a>
         </p>
-        {onBack && (
-          <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--faint)', marginTop: 10 }}>
-            <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'var(--faint)', cursor: 'pointer', fontSize: 13, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              ← Back to home
-            </button>
-          </p>
-        )}
+        <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--faint)', marginTop: 8 }}>
+          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: 'var(--faint)', cursor: 'pointer', fontSize: 13, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            ← Back to home
+          </button>
+        </p>
       </div>
     </div>
   )
