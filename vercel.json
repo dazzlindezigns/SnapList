@@ -9,7 +9,13 @@
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "functions": {
-    "api/*.js": {
+    "api/mockup.js": {
+      "maxDuration": 60
+    },
+    "api/generate.js": {
+      "maxDuration": 30
+    },
+    "api/webhook.js": {
       "maxDuration": 30
     }
   }
