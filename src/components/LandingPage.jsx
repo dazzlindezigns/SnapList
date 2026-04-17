@@ -353,7 +353,6 @@ export default function LandingPage({ stripeUrl }) {
               </div>
             ))}
           </div>
-          <p style={{ textAlign: 'center', fontSize: 11, color: '#ccc', marginTop: '1.5rem' }}>* Placeholder testimonials — replace with real customer quotes</p>
         </div>
       </section>
 
