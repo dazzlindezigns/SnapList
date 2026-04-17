@@ -220,8 +220,8 @@ function DemoSection({ onBuy }) {
             )}
           </div>
 
-          {/* Demo already used — show upsell */}
-          {used && !result && (
+          {/* Demo already used — only show when they try to upload again */}
+          {used && !result && image && (
             <div style={{
               marginTop: '1.5rem',
               background: 'linear-gradient(135deg, rgba(145,113,189,0.15), rgba(255,102,196,0.1))',
