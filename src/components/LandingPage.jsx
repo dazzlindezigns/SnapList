@@ -68,10 +68,22 @@ function DemoSection({ onBuy }) {
   }
 
   const toBase64 = (file) => new Promise((res, rej) => {
-    const r = new FileReader()
-    r.onload = () => res(r.result.split(',')[1])
-    r.onerror = rej
-    r.readAsDataURL(file)
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      const MAX = 1024
+      let w = img.width, h = img.height
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX }
+        else { w = Math.round(w * MAX / h); h = MAX }
+      }
+      canvas.width = w; canvas.height = h
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+      const data = canvas.toDataURL('image/jpeg', 0.85).split(',')[1]
+      res(data)
+    }
+    img.onerror = rej
+    img.src = URL.createObjectURL(file)
   })
 
   const generate = async () => {
@@ -89,7 +101,7 @@ function DemoSection({ onBuy }) {
           messages: [{
             role: 'user',
             content: [
-              { type: 'image', source: { type: 'base64', media_type: imageFile.type, data: b64 } },
+              { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } },
               { type: 'text', text: `You are a product listing expert for handmade and craft sellers. Analyze this product image and generate a complete optimized listing for ${platform}. Return ONLY a valid JSON object, no markdown, no backticks:\n{"title":"SEO-optimized title under 140 chars","description":"3 paragraphs: emotional appeal, product details/materials, gift angle + CTA","keywords":["kw1","kw2","kw3","kw4","kw5","kw6","kw7","kw8","kw9","kw10","kw11","kw12","kw13"],"category":"best category for ${platform}","price_suggestion":"$XX–$XX"}` }
             ]
           }]

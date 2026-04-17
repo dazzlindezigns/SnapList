@@ -1,6 +1,14 @@
 // api/mockup.js
 // Proxy for OpenAI image generation — keeps API key server-side
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb'
+    }
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
