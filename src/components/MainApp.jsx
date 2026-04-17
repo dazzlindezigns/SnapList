@@ -36,11 +36,14 @@ export default function MainApp() {
 
   const SKIN_TONES = [
     { value: 'none', label: 'No models' },
-    { value: 'light skin', label: '🏻 Light' },
-    { value: 'medium skin', label: '🏼 Medium' },
-    { value: 'medium-dark skin', label: '🏽 Tan' },
-    { value: 'dark skin', label: '🏾 Brown' },
-    { value: 'deep dark skin', label: '🏿 Deep' },
+    { value: 'Black', label: '✊🏿 Black' },
+    { value: 'African American', label: '🇺🇸 African American' },
+    { value: 'Latina', label: '🌺 Latina' },
+    { value: 'Asian', label: '🌸 Asian' },
+    { value: 'South Asian', label: '✨ South Asian' },
+    { value: 'Middle Eastern', label: '🌙 Middle Eastern' },
+    { value: 'White', label: '☁️ White' },
+    { value: 'Mixed race', label: '🌈 Mixed' },
   ]
 
   const handleReset = () => {
@@ -134,7 +137,7 @@ export default function MainApp() {
       const results = await Promise.allSettled(
         batch.map(async (promptText, j) => {
           const skinInstruction = skinTone !== 'none'
-            ? ` Include a ${skinTone} model or person interacting with the product naturally.`
+            ? ` Include a ${skinTone} model or person naturally interacting with or using the product.`
             : ''
           const descInstruction = productDesc ? ` Product context: ${productDesc}.` : ''
           const prompt = `Take this product and place it naturally into the following scene: ${promptText}.${descInstruction}${skinInstruction} Keep the product looking exactly as it does in the photo. Professional product photography, high quality, realistic lighting.`
@@ -298,7 +301,7 @@ export default function MainApp() {
 
               {/* Skin tone selector */}
               <div style={{ marginBottom: '1.25rem' }}>
-                <p style={s.secLabel}>Include models in mockups?</p>
+                <p style={s.secLabel}>Model ethnicity in mockups? <span style={{ color: '#bbb', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></p>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {SKIN_TONES.map(t => (
                     <button key={t.value} onClick={() => setSkinTone(t.value)} style={{
