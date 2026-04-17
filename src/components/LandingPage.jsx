@@ -266,49 +266,106 @@ export default function LandingPage({ stripeUrl }) {
       </nav>
 
       {/* HERO */}
-      <section style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '6rem 2rem 4rem', overflow: 'hidden' }}>
-        {/* Colorful background blobs */}
+      <section style={{ position: 'relative', padding: '5rem 2rem 4rem', overflow: 'hidden', background: '#fff' }}>
         <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none' }}>
-          <div style={{ position: 'absolute', top: -100, right: -100, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,102,196,0.12) 0%, transparent 70%)' }} />
-          <div style={{ position: 'absolute', bottom: -50, left: -100, width: 350, height: 350, borderRadius: '50%', background: 'radial-gradient(circle, rgba(145,113,189,0.12) 0%, transparent 70%)' }} />
-          <div style={{ position: 'absolute', top: '30%', left: '20%', width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(56,182,255,0.08) 0%, transparent 70%)' }} />
+          <div style={{ position: 'absolute', top: -120, right: -120, width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,102,196,0.1) 0%, transparent 70%)' }} />
+          <div style={{ position: 'absolute', bottom: -80, left: -80, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(145,113,189,0.1) 0%, transparent 70%)' }} />
         </div>
 
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', border: '1.5px solid rgba(145,113,189,0.2)', borderRadius: 20, padding: '8px 18px', marginBottom: '1.5rem', boxShadow: '0 4px 12px rgba(145,113,189,0.1)' }}>
-            <span style={{ fontSize: 14 }}>🎨</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#9171BD' }}>For makers, crafters & creative sellers</span>
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
+          {/* Left — copy */}
+          <div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', border: '1.5px solid rgba(145,113,189,0.2)', borderRadius: 20, padding: '8px 18px', marginBottom: '1.5rem', boxShadow: '0 4px 12px rgba(145,113,189,0.1)' }}>
+              <span style={{ fontSize: 14 }}>🎨</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#9171BD' }}>For makers, crafters & creative sellers</span>
+            </div>
+
+            <h1 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(2.8rem, 6vw, 4.5rem)', lineHeight: .95, letterSpacing: '-.03em', marginBottom: '1.25rem', color: '#1a1a2e' }}>
+              Stop writing<br />listings.<br />
+              <span style={{ background: 'linear-gradient(135deg, #9171BD, #FF66C4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Start selling.</span>
+            </h1>
+
+            <p style={{ fontSize: 16, color: '#666', lineHeight: 1.75, maxWidth: 440, marginBottom: '0.75rem' }}>
+              Upload one photo. Get a complete, SEO-optimized listing <em>and</em> 10 professional AI mockups — in under a minute.
+            </p>
+            <p style={{ fontSize: 13, color: '#aaa', marginBottom: '2rem' }}>Etsy · Shopify · TikTok Shop · Beacons · Payhip · and more</p>
+
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: '2.5rem' }}>
+              <button onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })} style={{ padding: '15px 32px', background: 'linear-gradient(135deg, #9171BD, #FF66C4)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: '0 6px 20px rgba(145,113,189,0.35)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                Try it free ↓
+              </button>
+              <a href={buyUrl} target="_blank" rel="noopener noreferrer" style={{ padding: '15px 32px', background: '#fff', color: '#1a1a2e', border: '2px solid #e8e8e8', borderRadius: 14, fontSize: 16, fontWeight: 600, textDecoration: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                Get lifetime access — $19
+              </a>
+            </div>
+
+            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+              {[['30 sec', 'avg time per listing'], ['$19', 'one-time forever'], ['10', 'AI mockups per product']].map(([stat, label]) => (
+                <div key={stat}>
+                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '2rem', fontWeight: 900, background: 'linear-gradient(135deg, #9171BD, #FF66C4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{stat}</div>
+                  <div style={{ fontSize: 12, color: '#aaa', marginTop: 2 }}>{label}</div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <h1 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(3rem, 9vw, 6rem)', lineHeight: .92, letterSpacing: '-.03em', marginBottom: '1.5rem', color: '#1a1a2e' }}>
-            Stop writing<br />listings.<br />
-            <span style={{ background: 'linear-gradient(135deg, #9171BD, #FF66C4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Start selling.</span>
-          </h1>
-
-          <p style={{ fontSize: 'clamp(15px, 2vw, 18px)', fontWeight: 400, color: '#666', lineHeight: 1.75, maxWidth: 520, marginBottom: '1rem' }}>
-            Upload a photo of your handmade product. Get a complete, SEO-optimized listing — title, description, keywords, and category — ready to paste in seconds.
-          </p>
-          <p style={{ fontSize: 13, color: '#aaa', marginBottom: '2.5rem' }}>Works for Etsy · Shopify · TikTok Shop · Beacons · Payhip · and more</p>
-
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginBottom: '3rem' }}>
-            <button onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })} style={{ padding: '16px 36px', background: 'linear-gradient(135deg, #9171BD, #FF66C4)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: '0 6px 20px rgba(145,113,189,0.35)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              Try it free ↓
-            </button>
-            <a href={buyUrl} target="_blank" rel="noopener noreferrer" style={{ padding: '16px 36px', background: '#fff', color: '#1a1a2e', border: '2px solid #e8e8e8', borderRadius: 14, fontSize: 16, fontWeight: 600, textDecoration: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              Get lifetime access — $19
-            </a>
-          </div>
-
-          {/* Stats */}
-          <div style={{ display: 'flex', gap: '2.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-            {[['30 sec', 'avg time per listing'], ['$19', 'one-time, no subscription'], ['10', 'AI mockups per product']].map(([stat, label]) => (
-              <div key={stat} style={{ textAlign: 'center' }}>
-                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '2.2rem', fontWeight: 900, background: 'linear-gradient(135deg, #9171BD, #FF66C4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{stat}</div>
-                <div style={{ fontSize: 12, color: '#aaa', marginTop: 4 }}>{label}</div>
+          {/* Right — before/after visual */}
+          <div style={{ position: 'relative' }}>
+            <div style={{ background: 'linear-gradient(135deg, #f5f0ff, #fff5fb)', borderRadius: 24, padding: '1.5rem', boxShadow: '0 20px 60px rgba(145,113,189,0.15)', border: '1.5px solid rgba(145,113,189,0.1)' }}>
+              {/* Before */}
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <span style={{ background: '#f0f0f0', color: '#999', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>BEFORE</span>
+                  <span style={{ fontSize: 12, color: '#bbb' }}>Your original photo</span>
+                </div>
+                <div style={{ borderRadius: 14, overflow: 'hidden', background: '#f5f5f5', aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ textAlign: 'center', padding: '1.5rem' }}>
+                    <div style={{ fontSize: 40, marginBottom: 8 }}>📸</div>
+                    <p style={{ fontSize: 13, color: '#bbb', lineHeight: 1.5 }}>Any photo from your phone<br />No fancy setup needed</p>
+                  </div>
+                </div>
               </div>
-            ))}
+
+              {/* Arrow */}
+              <div style={{ textAlign: 'center', margin: '0.5rem 0', fontSize: 20 }}>✨</div>
+
+              {/* After */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <span style={{ background: 'linear-gradient(135deg, #9171BD, #FF66C4)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>AFTER</span>
+                  <span style={{ fontSize: 12, color: '#bbb' }}>10 AI mockups + full listing</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 10 }}>
+                  {[
+                    { bg: 'linear-gradient(135deg, #e8f4f8, #d0e8ff)', label: 'Studio shot', icon: '🤍' },
+                    { bg: 'linear-gradient(135deg, #fef3e8, #fde8d0)', label: 'Lifestyle', icon: '☀️' },
+                    { bg: 'linear-gradient(135deg, #f0f8e8, #e0f0d0)', label: 'Nature props', icon: '🌿' },
+                    { bg: 'linear-gradient(135deg, #f8e8f0, #f0d0e8)', label: 'Gift scene', icon: '🎁' },
+                    { bg: 'linear-gradient(135deg, #e8e8f8, #d8d0f0)', label: 'Marble flat', icon: '🤍' },
+                    { bg: 'linear-gradient(135deg, #f8f0e8, #f0e0d0)', label: 'Cozy home', icon: '🕯️' },
+                  ].map((m, i) => (
+                    <div key={i} style={{ borderRadius: 10, aspectRatio: '1', background: m.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                      <span style={{ fontSize: 18 }}>{m.icon}</span>
+                      <span style={{ fontSize: 9, color: '#888', fontWeight: 600 }}>{m.label}</span>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ background: '#fff', borderRadius: 10, padding: '10px 12px', border: '1px solid #f0f0f0' }}>
+                  <div style={{ fontSize: 10, color: '#bbb', fontWeight: 700, marginBottom: 4 }}>GENERATED TITLE</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#1a1a2e', lineHeight: 1.4 }}>Handmade PCT Queen Badge Reel | Night Shift Nurse Gift | Pink Black Beaded Retractable ID Holder</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Floating badge */}
+            <div style={{ position: 'absolute', top: -16, right: -16, background: 'linear-gradient(135deg, #FF66C4, #9171BD)', color: '#fff', borderRadius: 16, padding: '10px 16px', fontSize: 12, fontWeight: 700, boxShadow: '0 8px 20px rgba(255,102,196,0.4)', textAlign: 'center' }}>
+              ✨ 30 seconds<br /><span style={{ fontSize: 10, opacity: 0.9 }}>start to finish</span>
+            </div>
           </div>
         </div>
+
+        {/* Mobile single column override */}
+        <style>{`@media(max-width:768px){.hero-grid{grid-template-columns:1fr!important;}}`}</style>
       </section>
 
       {/* HOW IT WORKS */}

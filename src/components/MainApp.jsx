@@ -5,7 +5,7 @@ import { Logo } from './Logo'
 
 const PLATFORMS = ['Etsy', 'Shopify', 'Amazon Handmade', 'Own Website', 'Payhip', 'Beacons', 'TikTok Shop', 'Facebook Shop']
 
-const MOCKUP_PROMPTS = [
+const DEFAULT_SCENES = [
   'professional product photo on clean white background, studio lighting, e-commerce style',
   'lifestyle product photo on rustic wooden table with soft natural light',
   'product displayed on marble surface with minimalist styling, overhead flat lay',
@@ -32,6 +32,9 @@ export default function MainApp() {
   const [copied, setCopied] = useState({})
   const [productDesc, setProductDesc] = useState('')
   const [skinTone, setSkinTone] = useState('none')
+  const [scenes, setScenes] = useState([...DEFAULT_SCENES])
+  const [scenesLoading, setScenesLoading] = useState(false)
+  const [scenesGenerated, setScenesGenerated] = useState(false)
   const fileRef = useRef()
 
   const ETHNICITIES = [
@@ -56,10 +59,40 @@ export default function MainApp() {
 
   const [modelType, setModelType] = useState('woman')
 
+  const generateScenes = async () => {
+    if (!productDesc.trim()) return
+    setScenesLoading(true)
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 800,
+          system: 'You are a product photography expert. Respond ONLY with valid JSON. No markdown, no backticks.',
+          messages: [{ role: 'user', content: [{ type: 'text', text: `Generate 10 unique, contextually appropriate product photography scene descriptions for this product: "${productDesc}". Each scene should make sense for this specific product — think about who buys it, when they use it, and what settings feel natural. Avoid generic scenes that don't fit the product context. Respond ONLY with JSON: {"scenes": ["scene 1 description", "scene 2 description", ...10 total]}` }] }]
+        })
+      })
+      const data = await res.json()
+      const text = data.content?.find(b => b.type === 'text')?.text || ''
+      let parsed = null
+      try { parsed = JSON.parse(text) } catch {}
+      if (!parsed) { const clean = text.replace(/```json|```/g, '').trim(); try { parsed = JSON.parse(clean) } catch {} }
+      if (parsed?.scenes?.length) {
+        setScenes(parsed.scenes)
+        setScenesGenerated(true)
+      }
+    } catch (err) {
+      console.error('Scene generation error:', err)
+    }
+    setScenesLoading(false)
+  }
+
   const handleReset = () => {
     setImage(null); setImageFile(null); setResult(null)
     setMockups([]); setMockupProgress(0); setCopied({})
     setProductDesc(''); setSkinTone('none'); setModelType('woman')
+    setScenes([...DEFAULT_SCENES]); setScenesGenerated(false)
     if (fileRef.current) fileRef.current.value = ''
   }
 
@@ -142,8 +175,8 @@ export default function MainApp() {
     const generated = []
     const BATCH_SIZE = 3
 
-    for (let i = 0; i < MOCKUP_PROMPTS.length; i += BATCH_SIZE) {
-      const batch = MOCKUP_PROMPTS.slice(i, i + BATCH_SIZE)
+    for (let i = 0; i < scenes.length; i += BATCH_SIZE) {
+      const batch = scenes.slice(i, i + BATCH_SIZE)
       const results = await Promise.allSettled(
         batch.map(async (promptText, j) => {
           const skinInstruction = skinTone !== 'none'
@@ -300,14 +333,40 @@ export default function MainApp() {
               {/* Product description */}
               <div style={{ marginBottom: '1.25rem' }}>
                 <p style={s.secLabel}>What is this product? <span style={{ color: '#bbb', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional — helps AI & mockups)</span></p>
-                <textarea
-                  value={productDesc}
-                  onChange={e => setProductDesc(e.target.value)}
-                  placeholder="e.g. handmade PCT Queen badge reel with beaded chain, pink and black, retractable clip..."
-                  rows={2}
-                  style={{ width: '100%', background: '#fff', border: '1.5px solid rgba(145,113,189,0.2)', borderRadius: 10, padding: '10px 14px', color: '#1a1a2e', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, outline: 'none', resize: 'vertical', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
-                />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <textarea
+                    value={productDesc}
+                    onChange={e => { setProductDesc(e.target.value); setScenesGenerated(false) }}
+                    placeholder="e.g. baby shower gift basket, pink strawberry theme, for a Black baby girl..."
+                    rows={2}
+                    style={{ flex: 1, background: '#fff', border: '1.5px solid rgba(145,113,189,0.2)', borderRadius: 10, padding: '10px 14px', color: '#1a1a2e', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, outline: 'none', resize: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+                  />
+                </div>
+                {productDesc.trim() && (
+                  <button onClick={generateScenes} disabled={scenesLoading} style={{ marginTop: 8, padding: '7px 16px', background: scenesGenerated ? '#f0fff4' : 'linear-gradient(135deg, rgba(145,113,189,0.12), rgba(255,102,196,0.08))', border: scenesGenerated ? '1.5px solid #86efac' : '1.5px solid rgba(145,113,189,0.25)', borderRadius: 8, color: scenesGenerated ? '#166534' : '#9171BD', fontSize: 12, fontWeight: 700, cursor: scenesLoading ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {scenesLoading ? <><span className="spinner-dark" style={{ width: 12, height: 12 }} />Generating scenes...</> : scenesGenerated ? '✅ Scenes customized!' : '🎬 Generate smart scenes for this product'}
+                  </button>
+                )}
               </div>
+
+              {/* Scene editor */}
+              {scenesGenerated && (
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <p style={s.secLabel}>Mockup scenes <span style={{ color: '#bbb', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(edit any scene)</span></p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 220, overflowY: 'auto', paddingRight: 4 }}>
+                    {scenes.map((scene, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontSize: 11, color: '#bbb', fontWeight: 700, minWidth: 16 }}>{i + 1}</span>
+                        <input
+                          value={scene}
+                          onChange={e => { const updated = [...scenes]; updated[i] = e.target.value; setScenes(updated) }}
+                          style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1.5px solid #e8e8e8', fontSize: 12, color: '#1a1a2e', fontFamily: "'Plus Jakarta Sans', sans-serif", outline: 'none', background: '#fff' }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Model selector */}
               <div style={{ marginBottom: '1.25rem' }}>
