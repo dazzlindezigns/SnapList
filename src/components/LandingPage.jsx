@@ -64,11 +64,11 @@ function DemoSection({ onBuy }) {
   const fileRef = useRef()
 
   const DEMO_MOCKUP_PROMPTS = [
-    'professional product photo on clean white background, studio lighting, e-commerce style, handmade craft product',
-    'lifestyle product photo on rustic wooden table with soft natural light, handmade craft item, cozy home setting',
+    'Place this product on a clean white background with soft studio lighting. Professional e-commerce product photography.',
+    'Place this product in a cozy lifestyle scene on a rustic wooden table with soft natural window light and warm tones.',
   ]
 
-  const generateMockups = async (productTitle) => {
+  const generateMockups = async (productTitle, b64) => {
     setMockupLoading(true)
     const generated = []
     for (const prompt of DEMO_MOCKUP_PROMPTS) {
@@ -77,16 +77,15 @@ function DemoSection({ onBuy }) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            model: 'dall-e-3',
-            prompt: `${prompt}. Product: ${productTitle}`,
-            n: 1,
-            size: '1024x1024',
-            quality: 'standard'
+            prompt: `${prompt} The product is: ${productTitle}. Keep the product looking exactly as shown in the photo.`,
+            imageBase64: b64,
+            mimeType: 'image/jpeg'
           })
         })
         const data = await res.json()
-        if (data.data?.[0]?.url) {
-          generated.push(data.data[0].url)
+        if (data.b64) {
+          const url = `data:${data.mimeType || 'image/png'};base64,${data.b64}`
+          generated.push(url)
           setMockups([...generated])
         }
       } catch { /* skip failed mockup */ }
@@ -132,24 +131,34 @@ function DemoSection({ onBuy }) {
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
           max_tokens: 1000,
+          system: 'You are a product listing expert. You ONLY respond with valid JSON. No markdown, no backticks, no explanation, no text before or after the JSON object.',
           messages: [{
             role: 'user',
             content: [
               { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } },
-              { type: 'text', text: `You are a product listing expert for handmade and craft sellers. Analyze this product image and generate a complete optimized listing for ${platform}. Return ONLY a valid JSON object, no markdown, no backticks:\n{"title":"SEO-optimized title under 140 chars","description":"3 paragraphs: emotional appeal, product details/materials, gift angle + CTA","keywords":["kw1","kw2","kw3","kw4","kw5","kw6","kw7","kw8","kw9","kw10","kw11","kw12","kw13"],"category":"best category for ${platform}","price_suggestion":"$XX–$XX"}` }
+              { type: 'text', text: `Analyze this product image and generate an optimized listing for ${platform}. Respond with ONLY this JSON structure: {"title":"SEO title under 140 chars","description":"3 paragraphs about this product","keywords":["kw1","kw2","kw3","kw4","kw5","kw6","kw7","kw8","kw9","kw10","kw11","kw12","kw13"],"category":"product category","price_suggestion":"$XX-$XX"}` }
             ]
           }]
         })
       })
       const data = await res.json()
       const text = data.content?.find(b => b.type === 'text')?.text || ''
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) throw new Error('No JSON found in response')
-      const parsed = JSON.parse(jsonMatch[0])
+      // Try multiple parsing strategies
+      let parsed = null
+      try { parsed = JSON.parse(text) } catch {}
+      if (!parsed) {
+        const clean = text.replace(/```json/g, '').replace(/```/g, '').trim()
+        try { parsed = JSON.parse(clean) } catch {}
+      }
+      if (!parsed) {
+        const match = text.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/)
+        if (match) try { parsed = JSON.parse(match[0]) } catch {}
+      }
+      if (!parsed) throw new Error('Could not parse response — please try again')
       setResult(parsed)
       setUsed(true)
-      // Generate 2 demo mockups after listing
-      generateMockups(parsed.title || 'handmade product')
+      // Generate 2 demo mockups after listing — pass the b64 image
+      generateMockups(parsed.title || 'handmade product', b64)
     } catch (err) {
       setResult({ error: err.message || 'Something went wrong — please try again.' })
     }

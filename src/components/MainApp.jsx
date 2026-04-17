@@ -70,20 +70,30 @@ export default function MainApp() {
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
           max_tokens: 1000,
+          system: 'You are a product listing expert. You ONLY respond with valid JSON. No markdown, no backticks, no explanation, no text before or after the JSON object.',
           messages: [{
             role: 'user',
             content: [
               { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } },
-              { type: 'text', text: `You are a product listing expert for handmade and craft sellers. Analyze this product image and generate a complete optimized listing for ${platform}. Return ONLY a valid JSON object with no markdown, no backticks, no preamble:\n{"title":"SEO-optimized title under 140 chars","description":"3 paragraphs: emotional appeal, product details/materials/sizing, gift angle + CTA","keywords":["kw1","kw2","kw3","kw4","kw5","kw6","kw7","kw8","kw9","kw10","kw11","kw12","kw13"],"category":"best product category for ${platform}","price_suggestion":"$XX–$XX","occasion_tags":["tag1","tag2","tag3","tag4","tag5"]}` }
+              { type: 'text', text: `Analyze this product image and generate an optimized listing for ${platform}. Respond with ONLY this JSON structure: {"title":"SEO title under 140 chars","description":"3 paragraphs about this product","keywords":["kw1","kw2","kw3","kw4","kw5","kw6","kw7","kw8","kw9","kw10","kw11","kw12","kw13"],"category":"product category","price_suggestion":"$XX-$XX","occasion_tags":["tag1","tag2","tag3","tag4","tag5"]}` }
             ]
           }]
         })
       })
       const data = await res.json()
       const text = data.content?.find(b => b.type === 'text')?.text || ''
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) throw new Error('No JSON found in response')
-      setResult(JSON.parse(jsonMatch[0]))
+      let parsed = null
+      try { parsed = JSON.parse(text) } catch {}
+      if (!parsed) {
+        const clean = text.replace(/```json/g, '').replace(/```/g, '').trim()
+        try { parsed = JSON.parse(clean) } catch {}
+      }
+      if (!parsed) {
+        const match = text.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/)
+        if (match) try { parsed = JSON.parse(match[0]) } catch {}
+      }
+      if (!parsed) throw new Error('Could not parse response')
+      setResult(parsed)
     } catch {
       setResult({ error: 'Something went wrong — please try again.' })
     }
@@ -96,24 +106,21 @@ export default function MainApp() {
     setMockups([])
     setMockupProgress(0)
 
+    const b64 = await toBase64(imageFile)
     const generated = []
+
     for (let i = 0; i < MOCKUP_PROMPTS.length; i++) {
       try {
-        const prompt = `Handmade craft product mockup: ${MOCKUP_PROMPTS[i]}. The product is a handmade item. Clean, professional, high quality product photography.`
+        const prompt = `Take this product and place it naturally into the following scene: ${MOCKUP_PROMPTS[i]}. Keep the product looking exactly as it does in the photo. Professional product photography, high quality, realistic lighting.`
         const res = await fetch('/api/mockup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'dall-e-3',
-            prompt,
-            n: 1,
-            size: '1024x1024',
-            quality: 'standard'
-          })
+          body: JSON.stringify({ prompt, imageBase64: b64, mimeType: 'image/jpeg' })
         })
         const data = await res.json()
-        if (data.data?.[0]?.url) {
-          generated.push({ url: data.data[0].url, label: MOCKUP_PROMPTS[i].split(',')[0] })
+        if (data.b64) {
+          const url = `data:${data.mimeType || 'image/png'};base64,${data.b64}`
+          generated.push({ url, label: MOCKUP_PROMPTS[i].split(',')[0] })
           setMockups([...generated])
         }
       } catch {
