@@ -4,7 +4,7 @@ import LandingPage from './components/LandingPage'
 import AuthPage from './components/AuthPage'
 import MainApp from './components/MainApp'
 
-const STRIPE_URL = 'https://buy.stripe.com/PLACEHOLDER'
+const STRIPE_URL = import.meta.env.VITE_STRIPE_URL || 'https://buy.stripe.com/PLACEHOLDER'
 
 export default function App() {
   const [user, setUser] = useState(null)

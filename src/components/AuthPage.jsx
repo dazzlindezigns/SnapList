@@ -162,7 +162,7 @@ export default function AuthPage({ onAuth, onBack }) {
         {/* Purchase link */}
         <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--faint)', marginTop: 20 }}>
           Don't have access yet?{' '}
-          <a href="https://buy.stripe.com/cNi8wO2Y69Zz3MTcbEa3u05" target="_blank" rel="noopener noreferrer"
+          <a href={import.meta.env.VITE_STRIPE_URL || 'https://buy.stripe.com/PLACEHOLDER'} target="_blank" rel="noopener noreferrer"
             style={{ color: 'var(--purple)', textDecoration: 'none' }}>
             Get lifetime access — $19
           </a>

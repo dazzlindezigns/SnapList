@@ -51,7 +51,7 @@ export default function MainApp({ user, onSignOut }) {
     setResult(null)
     try {
       const b64 = await toBase64(imageFile)
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -85,12 +85,9 @@ export default function MainApp({ user, onSignOut }) {
     for (let i = 0; i < MOCKUP_PROMPTS.length; i++) {
       try {
         const prompt = `Handmade craft product mockup: ${MOCKUP_PROMPTS[i]}. The product is a handmade item. Clean, professional, high quality product photography.`
-        const res = await fetch('https://api.openai.com/v1/images/generations', {
+        const res = await fetch('/api/mockup', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             model: 'dall-e-3',
             prompt,
