@@ -1,12 +1,8 @@
 // api/mockup.js
-// Proxy for Google Gemini image generation — places actual product into lifestyle scenes
+// Proxy for Google Gemini 2.5 Flash Image generation
 
 export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb'
-    }
-  }
+  api: { bodyParser: { sizeLimit: '10mb' } }
 }
 
 export default async function handler(req, res) {
@@ -36,15 +32,19 @@ export default async function handler(req, res) {
             ]
           }],
           generationConfig: {
-            responseModalities: ['IMAGE'],
-            imageConfig: { aspectRatio: '1:1' }
+            responseModalities: ['IMAGE', 'TEXT']
           }
         })
       }
     )
 
     const data = await response.json()
-    console.log('Gemini response status:', response.status)
+    console.log('Gemini status:', response.status)
+    console.log('Gemini parts:', JSON.stringify(data.candidates?.[0]?.content?.parts?.map(p => ({
+      hasText: !!p.text,
+      hasImage: !!p.inline_data,
+      textPreview: p.text?.slice(0, 100)
+    }))))
 
     if (!response.ok) {
       console.error('Gemini error:', JSON.stringify(data))
@@ -55,8 +55,10 @@ export default async function handler(req, res) {
     const imagePart = parts.find(p => p.inline_data?.data)
 
     if (!imagePart) {
-      console.error('No image in Gemini response:', JSON.stringify(data))
-      return res.status(500).json({ error: 'No image generated' })
+      // Log what we got instead
+      const textPart = parts.find(p => p.text)
+      console.error('No image — got text instead:', textPart?.text?.slice(0, 200))
+      return res.status(500).json({ error: 'No image generated', detail: textPart?.text?.slice(0, 100) })
     }
 
     return res.status(200).json({
