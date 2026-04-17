@@ -79,7 +79,9 @@ export default function MainApp({ user, onSignOut }) {
       })
       const data = await res.json()
       const text = data.content?.find(b => b.type === 'text')?.text || ''
-      setResult(JSON.parse(text.replace(/```json|```/g, '').trim()))
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) throw new Error('No JSON found in response')
+      setResult(JSON.parse(jsonMatch[0]))
     } catch {
       setResult({ error: 'Something went wrong — please try again.' })
     }

@@ -109,7 +109,9 @@ function DemoSection({ onBuy }) {
       })
       const data = await res.json()
       const text = data.content?.find(b => b.type === 'text')?.text || ''
-      setResult(JSON.parse(text.replace(/```json|```/g, '').trim()))
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) throw new Error('No JSON found in response')
+      setResult(JSON.parse(jsonMatch[0]))
       setUsed(true)
     } catch (err) {
       setResult({ error: err.message || 'Something went wrong — please try again.' })
