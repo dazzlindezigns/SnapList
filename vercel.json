@@ -1,6 +1,12 @@
 {
+  "buildCommand": "vite build",
+  "outputDirectory": "dist",
+  "framework": "vite",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" }
+    { "source": "/api/generate", "destination": "/api/generate" },
+    { "source": "/api/mockup", "destination": "/api/mockup" },
+    { "source": "/api/webhook", "destination": "/api/webhook" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "functions": {
     "api/*.js": {

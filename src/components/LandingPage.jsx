@@ -99,8 +99,8 @@ function DemoSection({ onBuy }) {
       const text = data.content?.find(b => b.type === 'text')?.text || ''
       setResult(JSON.parse(text.replace(/```json|```/g, '').trim()))
       setUsed(true)
-    } catch {
-      setResult({ error: 'Something went wrong — please try again.' })
+    } catch (err) {
+      setResult({ error: err.message || 'Something went wrong — please try again.' })
     }
     setLoading(false)
   }
