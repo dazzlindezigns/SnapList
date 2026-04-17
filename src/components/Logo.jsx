@@ -24,7 +24,7 @@ export function Logo({ size = 36, fontSize = 22 }) {
         fontWeight: 900, fontSize,
         letterSpacing: '-0.02em', lineHeight: 1
       }}>
-        <span style={{ color: '#FFFFFF' }}>Snap</span>
+        <span style={{ color: '#1a1a2e' }}>Snap</span>
         <span style={{ color: '#FF66C4' }}>.</span>
         <span style={{ color: '#9171BD' }}>List</span>
       </span>

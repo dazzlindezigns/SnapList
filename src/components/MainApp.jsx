@@ -94,7 +94,8 @@ export default function MainApp() {
       }
       if (!parsed) throw new Error('Could not parse response')
       setResult(parsed)
-    } catch {
+    } catch (err) {
+      console.error('Listing error:', err.message)
       setResult({ error: 'Something went wrong — please try again.' })
     }
     setListingLoading(false)
@@ -275,7 +276,7 @@ export default function MainApp() {
               </div>
 
               {/* Single Generate Button — triggers both listing + mockups */}
-              <button onClick={() => { generateListing(); generateMockups() }} 
+              <button onClick={async () => { await generateListing(); generateMockups() }} 
                 disabled={listingLoading || mockupLoading} style={{
                 width: '100%', padding: '15px 24px',
                 background: 'linear-gradient(135deg, #9171BD, #FF66C4)',
@@ -297,47 +298,40 @@ export default function MainApp() {
               </button>
             </div>
           )}
-        </div>
 
-        {/* RIGHT PANEL */}
-        <div>
-          {/* Mockups */}
-          {mockups.length > 0 && (
-            <div style={{ marginBottom: '1.5rem' }}>
-              <p style={s.secLabel}>Product Mockups ({mockups.length}/10)</p>
+          {/* Mockups — left panel, below generate button */}
+          {(mockups.length > 0 || mockupLoading) && (
+            <div style={{ marginTop: '1.5rem' }}>
+              <p style={s.secLabel}>
+                Product Mockups ({mockups.length}/10){mockupLoading ? ' — generating...' : ''}
+              </p>
               <div style={s.mockupGrid}>
                 {mockups.map((m, i) => (
                   <div key={i} style={s.mockupCard}>
                     <img src={m.url} alt={m.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <div style={{
-                      position: 'absolute', bottom: 6, left: 6,
-                      fontSize: 10, background: 'rgba(0,0,0,0.65)',
-                      color: 'rgba(255,255,255,0.8)', padding: '2px 7px', borderRadius: 4
-                    }}>{m.label}</div>
-                    <a href={m.url} download={`mockup-${i + 1}.png`} target="_blank" rel="noopener noreferrer"
-                      style={{
-                        position: 'absolute', top: 6, right: 6,
-                        fontSize: 10, background: 'rgba(145,113,189,0.85)',
-                        color: '#fff', padding: '3px 8px', borderRadius: 4,
-                        textDecoration: 'none', fontWeight: 700
-                      }}>↓ Save</a>
+                    <div style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 10, background: 'rgba(0,0,0,0.5)', color: '#fff', padding: '2px 7px', borderRadius: 4 }}>{m.label}</div>
+                    <a href={m.url} download={`mockup-${i+1}.png`} target="_blank" rel="noopener noreferrer" style={{ position: 'absolute', top: 6, right: 6, fontSize: 10, background: 'rgba(145,113,189,0.85)', color: '#fff', padding: '3px 8px', borderRadius: 4, textDecoration: 'none', fontWeight: 700 }}>↓ Save</a>
+                  </div>
+                ))}
+                {mockupLoading && Array.from({ length: Math.min(3, 10 - mockups.length) }).map((_, i) => (
+                  <div key={`sk-${i}`} style={{ ...s.mockupCard, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span className="spinner-dark" />
                   </div>
                 ))}
               </div>
             </div>
           )}
+        </div>
 
+        {/* RIGHT PANEL — listing only */}
+        <div>
           {/* Listing output */}
           <p style={s.secLabel}>Generated Listing</p>
 
-          {!result && !listingLoading && mockups.length === 0 && (
+          {!result && !listingLoading && (
             <div style={s.empty}>
-              <div style={{
-                width: 56, height: 56, borderRadius: 14,
-                background: 'linear-gradient(135deg, rgba(145,113,189,0.1), rgba(255,102,196,0.08))',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26
-              }}>✨</div>
-              <p>Upload a photo and tap Generate<br />to build your listing instantly.</p>
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: 'linear-gradient(135deg, rgba(145,113,189,0.1), rgba(255,102,196,0.08))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>✨</div>
+              <p style={{ color: '#aaa' }}>Upload a photo and tap Generate<br />to build your listing instantly.</p>
             </div>
           )}
 
