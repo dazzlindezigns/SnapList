@@ -30,7 +30,25 @@ export default function MainApp() {
   const [result, setResult] = useState(null)
   const [mockups, setMockups] = useState([])
   const [copied, setCopied] = useState({})
+  const [productDesc, setProductDesc] = useState('')
+  const [skinTone, setSkinTone] = useState('none')
   const fileRef = useRef()
+
+  const SKIN_TONES = [
+    { value: 'none', label: 'No models' },
+    { value: 'light skin', label: '🏻 Light' },
+    { value: 'medium skin', label: '🏼 Medium' },
+    { value: 'medium-dark skin', label: '🏽 Tan' },
+    { value: 'dark skin', label: '🏾 Brown' },
+    { value: 'deep dark skin', label: '🏿 Deep' },
+  ]
+
+  const handleReset = () => {
+    setImage(null); setImageFile(null); setResult(null)
+    setMockups([]); setMockupProgress(0); setCopied({})
+    setProductDesc(''); setSkinTone('none')
+    if (fileRef.current) fileRef.current.value = ''
+  }
 
   const handleFile = (file) => {
     if (!file || !file.type.startsWith('image/')) return
@@ -75,7 +93,7 @@ export default function MainApp() {
             role: 'user',
             content: [
               { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } },
-              { type: 'text', text: `Analyze this product image and generate an optimized listing for ${platform}. Respond with ONLY this JSON structure: {"title":"SEO title under 140 chars","description":"3 paragraphs about this product","keywords":["kw1","kw2","kw3","kw4","kw5","kw6","kw7","kw8","kw9","kw10","kw11","kw12","kw13"],"category":"product category","price_suggestion":"$XX-$XX","occasion_tags":["tag1","tag2","tag3","tag4","tag5"]}` }
+              { type: 'text', text: `Analyze this product image and generate an optimized listing for ${platform}.${productDesc ? ` Additional context: ${productDesc}.` : ''} Respond with ONLY this JSON structure: {"title":"SEO title under 140 chars","description":"3 paragraphs about this product","keywords":["kw1","kw2","kw3","kw4","kw5","kw6","kw7","kw8","kw9","kw10","kw11","kw12","kw13"],"category":"product category","price_suggestion":"$XX-$XX","occasion_tags":["tag1","tag2","tag3","tag4","tag5"]}` }
             ]
           }]
         })
@@ -115,7 +133,11 @@ export default function MainApp() {
       const batch = MOCKUP_PROMPTS.slice(i, i + BATCH_SIZE)
       const results = await Promise.allSettled(
         batch.map(async (promptText, j) => {
-          const prompt = `Take this product and place it naturally into the following scene: ${promptText}. Keep the product looking exactly as it does in the photo. Professional product photography, high quality, realistic lighting.`
+          const skinInstruction = skinTone !== 'none'
+            ? ` Include a ${skinTone} model or person interacting with the product naturally.`
+            : ''
+          const descInstruction = productDesc ? ` Product context: ${productDesc}.` : ''
+          const prompt = `Take this product and place it naturally into the following scene: ${promptText}.${descInstruction}${skinInstruction} Keep the product looking exactly as it does in the photo. Professional product photography, high quality, realistic lighting.`
           const res = await fetch('/api/mockup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -261,6 +283,36 @@ export default function MainApp() {
 
           {image && (
             <div style={{ marginTop: '1.5rem' }}>
+
+              {/* Product description */}
+              <div style={{ marginBottom: '1.25rem' }}>
+                <p style={s.secLabel}>What is this product? <span style={{ color: '#bbb', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional — helps AI & mockups)</span></p>
+                <textarea
+                  value={productDesc}
+                  onChange={e => setProductDesc(e.target.value)}
+                  placeholder="e.g. handmade PCT Queen badge reel with beaded chain, pink and black, retractable clip..."
+                  rows={2}
+                  style={{ width: '100%', background: '#fff', border: '1.5px solid rgba(145,113,189,0.2)', borderRadius: 10, padding: '10px 14px', color: '#1a1a2e', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, outline: 'none', resize: 'vertical', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+                />
+              </div>
+
+              {/* Skin tone selector */}
+              <div style={{ marginBottom: '1.25rem' }}>
+                <p style={s.secLabel}>Include models in mockups?</p>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {SKIN_TONES.map(t => (
+                    <button key={t.value} onClick={() => setSkinTone(t.value)} style={{
+                      padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                      cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      border: skinTone === t.value ? '2px solid #9171BD' : '1.5px solid #e8e8e8',
+                      background: skinTone === t.value ? '#9171BD' : '#fff',
+                      color: skinTone === t.value ? '#fff' : '#666',
+                      transition: 'all .15s'
+                    }}>{t.label}</button>
+                  ))}
+                </div>
+              </div>
+
               <p style={s.secLabel}>Selling On</p>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: '1.25rem' }}>
                 {PLATFORMS.map(p => (
@@ -296,6 +348,19 @@ export default function MainApp() {
                   <>✨ Generate Listing + Mockups</>
                 )}
               </button>
+
+              {/* Reset button */}
+              {(result || mockups.length > 0) && (
+                <button onClick={handleReset} style={{
+                  width: '100%', marginTop: 10, padding: '11px 24px',
+                  background: 'transparent', border: '1.5px solid #e8e8e8',
+                  borderRadius: 12, color: '#999',
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all .15s'
+                }}>
+                  🔄 Start a new listing
+                </button>
+              )}
             </div>
           )}
 
