@@ -20,7 +20,7 @@ const DOTS = {
   WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)'
 }
 
-export default function AuthPage({ onAuth }) {
+export default function AuthPage({ onAuth, onBack }) {
   const [mode, setMode] = useState('login') // login | signup | forgot
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -167,6 +167,13 @@ export default function AuthPage({ onAuth }) {
             Get lifetime access — $19
           </a>
         </p>
+        {onBack && (
+          <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--faint)', marginTop: 10 }}>
+            <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'var(--faint)', cursor: 'pointer', fontSize: 13, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              ← Back to home
+            </button>
+          </p>
+        )}
       </div>
     </div>
   )
