@@ -108,26 +108,33 @@ export default function MainApp() {
 
     const b64 = await toBase64(imageFile)
     const generated = []
+    const BATCH_SIZE = 3
 
-    for (let i = 0; i < MOCKUP_PROMPTS.length; i++) {
-      try {
-        const prompt = `Take this product and place it naturally into the following scene: ${MOCKUP_PROMPTS[i]}. Keep the product looking exactly as it does in the photo. Professional product photography, high quality, realistic lighting.`
-        const res = await fetch('/api/mockup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt, imageBase64: b64, mimeType: 'image/jpeg' })
+    for (let i = 0; i < MOCKUP_PROMPTS.length; i += BATCH_SIZE) {
+      const batch = MOCKUP_PROMPTS.slice(i, i + BATCH_SIZE)
+      const results = await Promise.allSettled(
+        batch.map(async (promptText, j) => {
+          const prompt = `Take this product and place it naturally into the following scene: ${promptText}. Keep the product looking exactly as it does in the photo. Professional product photography, high quality, realistic lighting.`
+          const res = await fetch('/api/mockup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt, imageBase64: b64, mimeType: 'image/jpeg' })
+          })
+          const data = await res.json()
+          if (data.b64) {
+            return { url: `data:${data.mimeType || 'image/png'};base64,${data.b64}`, label: promptText.split(',')[0] }
+          }
+          return null
         })
-        const data = await res.json()
-        console.log(`Mockup ${i+1} response:`, data.b64 ? 'got image' : data.error || 'no image')
-        if (data.b64) {
-          const url = `data:${data.mimeType || 'image/png'};base64,${data.b64}`
-          generated.push({ url, label: MOCKUP_PROMPTS[i].split(',')[0] })
-          setMockups([...generated])
+      )
+
+      results.forEach(r => {
+        if (r.status === 'fulfilled' && r.value) {
+          generated.push(r.value)
         }
-      } catch {
-        // skip failed mockup, continue
-      }
-      setMockupProgress(i + 1)
+      })
+      setMockups([...generated])
+      setMockupProgress(Math.min(i + BATCH_SIZE, MOCKUP_PROMPTS.length))
     }
     setMockupLoading(false)
   }
@@ -142,63 +149,68 @@ export default function MainApp() {
     topbar: {
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '1rem 1.75rem',
-      borderBottom: '1px solid var(--border)',
-      background: 'rgba(26,23,32,0.92)',
+      borderBottom: '1px solid #f0f0f0',
+      background: 'rgba(255,255,255,0.95)',
       backdropFilter: 'blur(12px)',
-      position: 'sticky', top: 0, zIndex: 10
+      position: 'sticky', top: 0, zIndex: 10,
+      boxShadow: '0 2px 20px rgba(0,0,0,0.05)'
     },
     signout: {
-      fontSize: 13, color: 'var(--muted)', background: 'none',
-      border: '1px solid var(--border)', borderRadius: 8,
+      fontSize: 13, color: '#888', background: 'none',
+      border: '1.5px solid #e8e8e8', borderRadius: 8,
       padding: '6px 14px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
-      transition: 'all .15s'
+      transition: 'all .15s', fontWeight: 600
     },
     workspace: {
       display: 'grid', gridTemplateColumns: '1fr 1fr',
-      gap: '2rem', maxWidth: 1200, margin: '0 auto', padding: '2rem'
+      gap: '2rem', maxWidth: 1200, margin: '0 auto', padding: '2rem',
+      background: '#FAFAFA', minHeight: 'calc(100vh - 60px)'
     },
     secLabel: {
-      fontSize: 10, fontWeight: 600, letterSpacing: '.18em',
-      textTransform: 'uppercase', color: 'var(--faint)', marginBottom: 12
+      fontSize: 10, fontWeight: 700, letterSpacing: '.18em',
+      textTransform: 'uppercase', color: '#bbb', marginBottom: 12
     },
     uploadZone: {
-      border: `1.5px dashed ${drag ? 'var(--purple)' : 'rgba(145,113,189,0.3)'}`,
+      border: `2px dashed ${drag ? '#9171BD' : 'rgba(145,113,189,0.25)'}`,
       borderRadius: 18, padding: '2rem',
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
       gap: '1rem', cursor: 'pointer', minHeight: 220,
-      background: drag ? 'rgba(145,113,189,0.09)' : 'rgba(145,113,189,0.04)',
-      transition: 'all .2s', position: 'relative', overflow: 'hidden'
+      background: drag ? 'rgba(145,113,189,0.05)' : '#fff',
+      transition: 'all .2s', position: 'relative', overflow: 'hidden',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.06)'
     },
     outCard: {
-      background: 'var(--card)', border: '1px solid var(--border)',
+      background: '#fff', border: '1.5px solid #f0f0f0',
       borderRadius: 14, padding: '1.25rem', marginBottom: 12,
-      animation: 'fadeUp .35s ease both'
+      animation: 'fadeUp .35s ease both',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.04)'
     },
     outHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
-    outLabel: { fontSize: 10, fontWeight: 600, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--faint)' },
+    outLabel: { fontSize: 10, fontWeight: 700, letterSpacing: '.15em', textTransform: 'uppercase', color: '#bbb' },
     copyBtn: {
-      fontSize: 12, color: 'var(--purple)', background: 'none', border: 'none',
+      fontSize: 12, color: '#9171BD', background: 'none', border: 'none',
       cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
-      fontWeight: 500, padding: 0, transition: 'opacity .15s'
+      fontWeight: 700, padding: 0, transition: 'opacity .15s'
     },
     pill: (type) => ({
-      fontSize: 12, fontWeight: 500, padding: '4px 11px', borderRadius: 20,
-      ...(type === 'purple' ? { background: 'rgba(145,113,189,0.15)', color: '#c4aee8', border: '1px solid rgba(145,113,189,0.25)' } :
-          { background: 'rgba(255,102,196,0.12)', color: '#ffaadf', border: '1px solid rgba(255,102,196,0.2)' })
+      fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 20,
+      ...(type === 'purple' ? { background: 'rgba(145,113,189,0.1)', color: '#7c5cbf', border: '1.5px solid rgba(145,113,189,0.2)' } :
+          { background: 'rgba(255,102,196,0.1)', color: '#cc44a0', border: '1.5px solid rgba(255,102,196,0.2)' })
     }),
     empty: {
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       justifyContent: 'center', minHeight: 300, gap: 14,
-      border: '1px solid var(--border)', borderRadius: 18,
-      color: 'var(--faint)', fontSize: 14, textAlign: 'center', padding: '2rem'
+      border: '2px dashed #e8e8e8', borderRadius: 18,
+      color: '#ccc', fontSize: 14, textAlign: 'center', padding: '2rem',
+      background: '#fafafa'
     },
     mockupGrid: {
       display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginTop: 12
     },
     mockupCard: {
       borderRadius: 10, overflow: 'hidden', aspectRatio: '1',
-      background: '#1a1720', border: '1px solid var(--border)',
+      background: '#f5f5f5', border: '1.5px solid #f0f0f0',
       position: 'relative'
     }
   }
@@ -209,10 +221,11 @@ export default function MainApp() {
         <Logo size={32} fontSize={20} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{
-            fontSize: 11, fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase',
-            background: 'rgba(145,113,189,0.15)', color: 'var(--purple)',
-            border: '1px solid rgba(145,113,189,0.3)', padding: '4px 12px', borderRadius: 20
-          }}>Lifetime Access</span>
+            fontSize: 11, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase',
+            background: 'linear-gradient(135deg, rgba(145,113,189,0.12), rgba(255,102,196,0.1))',
+            color: '#9171BD',
+            border: '1.5px solid rgba(145,113,189,0.2)', padding: '5px 14px', borderRadius: 20
+          }}>✨ Lifetime Access</span>
           <button style={s.signout} onClick={async () => { await supabase.auth.signOut(); navigate('/') }}>Sign out</button>
         </div>
       </div>
@@ -235,11 +248,11 @@ export default function MainApp() {
               <>
                 <div style={{
                   width: 54, height: 54, borderRadius: 14,
-                  background: 'linear-gradient(135deg,rgba(145,113,189,0.2),rgba(255,102,196,0.15))',
+                  background: 'linear-gradient(135deg,rgba(145,113,189,0.12),rgba(255,102,196,0.08))',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24
                 }}>📸</div>
-                <p style={{ fontSize: 14, color: 'var(--muted)', textAlign: 'center', lineHeight: 1.65 }}>
-                  <strong style={{ color: 'var(--purple)' }}>Click to upload</strong> or drag & drop<br />JPG, PNG, WEBP
+                <p style={{ fontSize: 14, color: '#888', textAlign: 'center', lineHeight: 1.65 }}>
+                  <strong style={{ color: '#9171BD' }}>Click to upload</strong> or drag & drop<br />JPG, PNG, WEBP
                 </p>
               </>
             )}
@@ -251,11 +264,11 @@ export default function MainApp() {
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: '1.25rem' }}>
                 {PLATFORMS.map(p => (
                   <button key={p} onClick={() => setPlatform(p)} style={{
-                    padding: '7px 13px', borderRadius: 8, fontSize: 12, fontWeight: 500,
+                    padding: '7px 13px', borderRadius: 8, fontSize: 12, fontWeight: 600,
                     cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    border: platform === p ? '1px solid var(--purple)' : '1px solid var(--border)',
-                    background: platform === p ? 'var(--purple)' : 'transparent',
-                    color: platform === p ? '#fff' : 'var(--muted)',
+                    border: platform === p ? '2px solid #9171BD' : '1.5px solid #e8e8e8',
+                    background: platform === p ? '#9171BD' : '#fff',
+                    color: platform === p ? '#fff' : '#888',
                     transition: 'all .15s'
                   }}>{p}</button>
                 ))}
@@ -265,20 +278,21 @@ export default function MainApp() {
               <button onClick={() => { generateListing(); generateMockups() }} 
                 disabled={listingLoading || mockupLoading} style={{
                 width: '100%', padding: '15px 24px',
-                background: 'linear-gradient(135deg, var(--purple), var(--pink))',
+                background: 'linear-gradient(135deg, #9171BD, #FF66C4)',
                 color: '#fff', border: 'none', borderRadius: 14,
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontSize: 15, fontWeight: 600, 
+                fontSize: 15, fontWeight: 700, 
                 cursor: (listingLoading || mockupLoading) ? 'not-allowed' : 'pointer',
                 opacity: (listingLoading || mockupLoading) ? 0.5 : 1, transition: 'all .2s',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                boxShadow: '0 6px 20px rgba(145,113,189,0.35)'
               }}>
                 {listingLoading ? (
                   <><span className="spinner" />Generating listing...</>
                 ) : mockupLoading ? (
                   <><span className="spinner" />Generating mockups ({mockupProgress}/10)...</>
                 ) : (
-                  <>✦ Generate Listing + Mockups</>
+                  <>✨ Generate Listing + Mockups</>
                 )}
               </button>
             </div>
@@ -303,9 +317,9 @@ export default function MainApp() {
                     <a href={m.url} download={`mockup-${i + 1}.png`} target="_blank" rel="noopener noreferrer"
                       style={{
                         position: 'absolute', top: 6, right: 6,
-                        fontSize: 10, background: 'rgba(145,113,189,0.8)',
+                        fontSize: 10, background: 'rgba(145,113,189,0.85)',
                         color: '#fff', padding: '3px 8px', borderRadius: 4,
-                        textDecoration: 'none', fontWeight: 500
+                        textDecoration: 'none', fontWeight: 700
                       }}>↓ Save</a>
                   </div>
                 ))}
@@ -320,17 +334,17 @@ export default function MainApp() {
             <div style={s.empty}>
               <div style={{
                 width: 56, height: 56, borderRadius: 14,
-                background: 'rgba(145,113,189,0.08)',
+                background: 'linear-gradient(135deg, rgba(145,113,189,0.1), rgba(255,102,196,0.08))',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26
-              }}>✦</div>
+              }}>✨</div>
               <p>Upload a photo and tap Generate<br />to build your listing instantly.</p>
             </div>
           )}
 
           {listingLoading && (
             <div style={s.empty}>
-              <span className="spinner" style={{ width: 28, height: 28, borderColor: 'rgba(145,113,189,0.3)', borderTopColor: 'var(--purple)' }} />
-              <p>Reading your product...</p>
+              <span className="spinner-dark" style={{ width: 28, height: 28 }} />
+              <p style={{ color: '#aaa' }}>Reading your product...</p>
             </div>
           )}
 
@@ -341,7 +355,7 @@ export default function MainApp() {
                   <span style={s.outLabel}>Title</span>
                   <button style={s.copyBtn} onClick={() => copy('title', result.title)}>{copied.title ? 'Copied!' : 'Copy'}</button>
                 </div>
-                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontWeight: 700, lineHeight: 1.45 }}>{result.title}</p>
+                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontWeight: 700, lineHeight: 1.45, color: '#1a1a2e' }}>{result.title}</p>
               </div>
 
               <div style={s.outCard}>
@@ -349,7 +363,7 @@ export default function MainApp() {
                   <span style={s.outLabel}>Description</span>
                   <button style={s.copyBtn} onClick={() => copy('desc', result.description)}>{copied.desc ? 'Copied!' : 'Copy'}</button>
                 </div>
-                <p style={{ fontSize: 13, lineHeight: 1.8, color: 'rgba(244,240,255,0.65)', whiteSpace: 'pre-wrap' }}>{result.description}</p>
+                <p style={{ fontSize: 13, lineHeight: 1.8, color: '#555', whiteSpace: 'pre-wrap' }}>{result.description}</p>
               </div>
 
               <div style={s.outCard}>
@@ -364,9 +378,9 @@ export default function MainApp() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
                 {[['Category', result.category], ['Price Suggestion', result.price_suggestion]].map(([label, val]) => (
-                  <div key={label} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 14px' }}>
-                    <div style={{ fontSize: 10, color: 'var(--faint)', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 5 }}>{label}</div>
-                    <div style={{ fontSize: 14, fontWeight: 600 }}>{val}</div>
+                  <div key={label} style={{ background: '#fff', border: '1.5px solid #f0f0f0', borderRadius: 12, padding: '12px 14px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                    <div style={{ fontSize: 10, color: '#bbb', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 5, fontWeight: 700 }}>{label}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a2e' }}>{val}</div>
                   </div>
                 ))}
               </div>

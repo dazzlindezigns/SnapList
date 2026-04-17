@@ -1,67 +1,38 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+const PLATFORMS = ['Etsy', 'Shopify', 'Own Website', 'Payhip', 'Beacons', 'TikTok Shop', 'Facebook Shop']
 const STRIPE_URL = import.meta.env.VITE_STRIPE_URL || 'https://buy.stripe.com/PLACEHOLDER'
 
-const PLATFORMS = ['Etsy', 'Shopify', 'Own Website', 'Payhip', 'Beacons', 'TikTok Shop', 'Facebook Shop']
-
 const HOW_IT_WORKS = [
-  { num: '01', title: 'Snap your product', body: 'Take a photo of your handmade item — straight from your phone, no fancy setup needed.' },
-  { num: '02', title: 'Pick your platform', body: 'Choose where you\'re selling. SnapList optimizes every word for that specific marketplace.' },
-  { num: '03', title: 'Get your full listing', body: 'Title, description, keywords, category, price suggestion, and occasion tags — ready to paste.' },
-  { num: '04', title: 'Generate 10 mockups', body: 'AI-generated product photos in different styles and settings. Look like a pro without a photoshoot.' },
+  { emoji: '📸', title: 'Snap your product', body: 'Upload any photo — straight from your phone. No fancy setup needed.' },
+  { emoji: '🎯', title: 'Pick your platform', body: 'Etsy, Shopify, TikTok Shop, your own site — we optimize for where you sell.' },
+  { emoji: '✨', title: 'Get your full listing', body: 'Title, description, keywords, category & price suggestion — ready to paste.' },
+  { emoji: '🖼️', title: 'Get 10 AI mockups', body: 'Professional product photos in lifestyle scenes — no photoshoot needed.' },
 ]
 
 const TESTIMONIALS = [
   { name: 'Jasmine T.', role: 'Etsy seller · jewelry', text: 'I used to spend 45 minutes writing each listing. Now it takes 30 seconds. This tool is everything for my shop.' },
-  { name: 'Maria R.', role: '3D printing seller', text: 'The keywords it generates are actually researched-level good. My views went up within the first week.' },
+  { name: 'Maria R.', role: '3D printing seller', text: 'The keywords it generates are researched-level good. My views went up within the first week.' },
   { name: 'Keisha B.', role: 'Handmade goods · Shopify', text: 'I was skeptical but the free demo convinced me instantly. Best $19 I\'ve spent on my business this year.' },
 ]
-
-const BG = {
-  position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
-  background: `
-    radial-gradient(ellipse 65% 55% at 15% 5%, rgba(145,113,189,0.22) 0%, transparent 55%),
-    radial-gradient(ellipse 50% 50% at 88% 95%, rgba(255,102,196,0.16) 0%, transparent 55%),
-    radial-gradient(ellipse 40% 40% at 65% 42%, rgba(56,182,255,0.08) 0%, transparent 50%)
-  `
-}
-
-const DOTS = {
-  position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
-  backgroundImage: 'radial-gradient(rgba(255,255,255,0.055) 1px, transparent 1px)',
-  backgroundSize: '28px 28px',
-  maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)',
-  WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)'
-}
 
 function LogoIcon({ size = 32 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 36 36" fill="none">
       <rect width="36" height="36" rx="10" fill="url(#lp-g)"/>
-      <path d="M10 14C10 11.8 11.8 10 14 10H22C24.2 10 26 11.8 26 14C26 16.2 24.2 18 22 18H14C11.8 18 10 19.8 10 22C10 24.2 11.8 26 14 26H26"
-        stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+      <path d="M10 14C10 11.8 11.8 10 14 10H22C24.2 10 26 11.8 26 14C26 16.2 24.2 18 22 18H14C11.8 18 10 19.8 10 22C10 24.2 11.8 26 14 26H26" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
       <circle cx="27" cy="10" r="3" fill="#FF66C4"/>
-      <defs>
-        <linearGradient id="lp-g" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#9171BD"/><stop offset="1" stopColor="#6B4FA0"/>
-        </linearGradient>
-      </defs>
+      <defs><linearGradient id="lp-g" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse"><stop stopColor="#9171BD"/><stop offset="1" stopColor="#6B4FA0"/></linearGradient></defs>
     </svg>
   )
 }
 
 function DemoSection({ onBuy }) {
   const DEMO_COOKIE = 'snaplist_demo_used'
-
-  const hasDemoBeenUsed = () => {
-    return document.cookie.split(';').some(c => c.trim().startsWith(`${DEMO_COOKIE}=`))
-  }
-
+  const hasDemoBeenUsed = () => document.cookie.split(';').some(c => c.trim().startsWith(`${DEMO_COOKIE}=`))
   const markDemoUsed = () => {
-    // Expires in 30 days
-    const exp = new Date()
-    exp.setDate(exp.getDate() + 30)
+    const exp = new Date(); exp.setDate(exp.getDate() + 30)
     document.cookie = `${DEMO_COOKIE}=1; expires=${exp.toUTCString()}; path=/`
   }
 
@@ -74,6 +45,7 @@ function DemoSection({ onBuy }) {
   const [mockups, setMockups] = useState([])
   const [mockupLoading, setMockupLoading] = useState(false)
   const [used, setUsed] = useState(() => hasDemoBeenUsed())
+  const [showUsedMsg, setShowUsedMsg] = useState(false)
   const fileRef = useRef()
 
   const DEMO_MOCKUP_PROMPTS = [
@@ -81,265 +53,193 @@ function DemoSection({ onBuy }) {
     'Place this product in a cozy lifestyle scene on a rustic wooden table with soft natural window light and warm tones.',
   ]
 
-  const generateMockups = async (productTitle, b64) => {
-    setMockupLoading(true)
-    const generated = []
-    for (const prompt of DEMO_MOCKUP_PROMPTS) {
-      try {
-        const res = await fetch('/api/mockup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            prompt: `${prompt} The product is: ${productTitle}. Keep the product looking exactly as shown in the photo.`,
-            imageBase64: b64,
-            mimeType: 'image/jpeg'
-          })
-        })
-        const data = await res.json()
-        if (data.b64) {
-          const url = `data:${data.mimeType || 'image/png'};base64,${data.b64}`
-          generated.push(url)
-          setMockups([...generated])
-        }
-      } catch { /* skip failed mockup */ }
-    }
-    setMockupLoading(false)
-  }
-
   const handleFile = (file) => {
-    if (!file || !file.type.startsWith('image/') || used) return
-    setImageFile(file)
-    setImage(URL.createObjectURL(file))
-    setResult(null)
+    if (!file || !file.type.startsWith('image/')) return
+    if (used) { setShowUsedMsg(true); return }
+    setImageFile(file); setImage(URL.createObjectURL(file)); setResult(null)
   }
 
   const toBase64 = (file) => new Promise((res, rej) => {
     const img = new Image()
     img.onload = () => {
       const canvas = document.createElement('canvas')
-      const MAX = 1024
-      let w = img.width, h = img.height
-      if (w > MAX || h > MAX) {
-        if (w > h) { h = Math.round(h * MAX / w); w = MAX }
-        else { w = Math.round(w * MAX / h); h = MAX }
-      }
+      const MAX = 1024; let w = img.width, h = img.height
+      if (w > MAX || h > MAX) { if (w > h) { h = Math.round(h * MAX / w); w = MAX } else { w = Math.round(w * MAX / h); h = MAX } }
       canvas.width = w; canvas.height = h
       canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-      const data = canvas.toDataURL('image/jpeg', 0.85).split(',')[1]
-      res(data)
+      res(canvas.toDataURL('image/jpeg', 0.85).split(',')[1])
     }
-    img.onerror = rej
-    img.src = URL.createObjectURL(file)
+    img.onerror = rej; img.src = URL.createObjectURL(file)
   })
+
+  const generateMockups = async (title, b64) => {
+    setMockupLoading(true)
+    const generated = []
+    for (const prompt of DEMO_MOCKUP_PROMPTS) {
+      try {
+        const res = await fetch('/api/mockup', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: `${prompt} The product is: ${title}. Keep the product exactly as shown.`, imageBase64: b64, mimeType: 'image/jpeg' })
+        })
+        const data = await res.json()
+        if (data.b64) { generated.push(`data:${data.mimeType || 'image/png'};base64,${data.b64}`); setMockups([...generated]) }
+      } catch {}
+    }
+    setMockupLoading(false)
+  }
 
   const generate = async () => {
     if (!imageFile || used) return
     setLoading(true)
     try {
       const b64 = await toBase64(imageFile)
-      // Call our serverless proxy instead of Anthropic directly
       const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 1000,
-          system: 'You are a product listing expert. You ONLY respond with valid JSON. No markdown, no backticks, no explanation, no text before or after the JSON object.',
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } },
-              { type: 'text', text: `Analyze this product image and generate an optimized listing for ${platform}. Respond with ONLY this JSON structure: {"title":"SEO title under 140 chars","description":"3 paragraphs about this product","keywords":["kw1","kw2","kw3","kw4","kw5","kw6","kw7","kw8","kw9","kw10","kw11","kw12","kw13"],"category":"product category","price_suggestion":"$XX-$XX"}` }
-            ]
-          }]
+          model: 'claude-sonnet-4-6', max_tokens: 1000,
+          system: 'You are a product listing expert. You ONLY respond with valid JSON. No markdown, no backticks, no explanation.',
+          messages: [{ role: 'user', content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } },
+            { type: 'text', text: `Analyze this product and generate an optimized listing for ${platform}. JSON only: {"title":"SEO title under 140 chars","description":"3 paragraphs","keywords":["kw1","kw2","kw3","kw4","kw5","kw6","kw7","kw8","kw9","kw10","kw11","kw12","kw13"],"category":"category","price_suggestion":"$XX-$XX"}` }
+          ]}]
         })
       })
       const data = await res.json()
       const text = data.content?.find(b => b.type === 'text')?.text || ''
-      // Try multiple parsing strategies
       let parsed = null
       try { parsed = JSON.parse(text) } catch {}
-      if (!parsed) {
-        const clean = text.replace(/```json/g, '').replace(/```/g, '').trim()
-        try { parsed = JSON.parse(clean) } catch {}
-      }
-      if (!parsed) {
-        const match = text.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/)
-        if (match) try { parsed = JSON.parse(match[0]) } catch {}
-      }
-      if (!parsed) throw new Error('Could not parse response — please try again')
-      setResult(parsed)
-      setUsed(true)
-      markDemoUsed()
-      // Generate 2 demo mockups after listing — pass the b64 image
+      if (!parsed) { const clean = text.replace(/```json|```/g, '').trim(); try { parsed = JSON.parse(clean) } catch {} }
+      if (!parsed) { const match = text.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/); if (match) try { parsed = JSON.parse(match[0]) } catch {} }
+      if (!parsed) throw new Error('Could not parse response')
+      setResult(parsed); setUsed(true); markDemoUsed()
       generateMockups(parsed.title || 'handmade product', b64)
-    } catch (err) {
-      setResult({ error: err.message || 'Something went wrong — please try again.' })
-    }
+    } catch (err) { setResult({ error: err.message || 'Something went wrong — please try again.' }) }
     setLoading(false)
   }
+
+  const pill = { fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 20, background: 'rgba(145,113,189,0.1)', color: '#7c5cbf', border: '1.5px solid rgba(145,113,189,0.2)' }
 
   return (
     <div style={{ maxWidth: 960, margin: '0 auto', padding: '0 1.5rem' }}>
       <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--purple)', marginBottom: 12 }}>Try it free — no account needed</p>
-        <h2 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', letterSpacing: '-.02em', marginBottom: 12 }}>
-          See it work on your product
-        </h2>
-        <p style={{ fontSize: 15, color: 'var(--muted)', maxWidth: 480, margin: '0 auto' }}>
-          Upload a real photo. Get a real listing. One try, on us.
-        </p>
+        <span style={{ display: 'inline-block', background: 'linear-gradient(135deg, #FF66C4, #9171BD)', color: '#fff', fontSize: 12, fontWeight: 700, padding: '6px 16px', borderRadius: 20, marginBottom: 16 }}>✨ Try it free — no account needed</span>
+        <h2 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(1.8rem, 4vw, 2.6rem)', color: '#1a1a2e', marginBottom: 10 }}>See it work on your product</h2>
+        <p style={{ fontSize: 15, color: '#666', maxWidth: 440, margin: '0 auto' }}>Upload a real photo. Get a real listing. One try, on us.</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
         <div>
           <div
-            style={{
-              border: `1.5px dashed ${drag ? 'var(--purple)' : 'rgba(145,113,189,0.3)'}`,
-              borderRadius: 18, padding: '2rem',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: '1rem', cursor: used ? 'default' : 'pointer', minHeight: 200,
-              background: drag ? 'rgba(145,113,189,0.09)' : 'rgba(145,113,189,0.04)',
-              transition: 'all .2s', position: 'relative', overflow: 'hidden'
-            }}
-            onDragOver={e => { if (!used) { e.preventDefault(); setDrag(true) } }}
+            style={{ border: `2px dashed ${drag ? '#9171BD' : 'rgba(145,113,189,0.3)'}`, borderRadius: 18, padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', cursor: 'pointer', minHeight: 200, background: drag ? 'rgba(145,113,189,0.05)' : '#fff', transition: 'all .2s', position: 'relative', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
+            onDragOver={e => { e.preventDefault(); setDrag(true) }}
             onDragLeave={() => setDrag(false)}
             onDrop={e => { e.preventDefault(); setDrag(false); handleFile(e.dataTransfer.files[0]) }}
-            onClick={() => !used && fileRef.current.click()}
+            onClick={() => fileRef.current.click()}
           >
             <input ref={fileRef} type="file" accept="image/*" onChange={e => handleFile(e.target.files[0])} style={{ display: 'none' }} />
-            {image ? (
-              <img src={image} alt="Product" style={{ width: '100%', borderRadius: 12, objectFit: 'cover', maxHeight: 220 }} />
-            ) : (
-              <>
-                <div style={{ width: 50, height: 50, borderRadius: 14, background: 'linear-gradient(135deg,rgba(145,113,189,0.2),rgba(255,102,196,0.15))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>📸</div>
-                <p style={{ fontSize: 14, color: 'var(--muted)', textAlign: 'center', lineHeight: 1.65 }}>
-                  <strong style={{ color: 'var(--purple)' }}>Click to upload</strong> or drag & drop
-                </p>
+            {image ? <img src={image} alt="Product" style={{ width: '100%', borderRadius: 12, objectFit: 'cover', maxHeight: 220 }} />
+            : <>
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: 'linear-gradient(135deg, rgba(145,113,189,0.15), rgba(255,102,196,0.1))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>📸</div>
+                <p style={{ fontSize: 14, color: '#888', textAlign: 'center', lineHeight: 1.65 }}><strong style={{ color: '#9171BD' }}>Click to upload</strong> or drag & drop</p>
               </>
-            )}
+            }
           </div>
 
-          {/* Demo already used — only show when they try to upload again */}
-          {used && !result && image && (
-            <div style={{
-              marginTop: '1.5rem',
-              background: 'linear-gradient(135deg, rgba(145,113,189,0.15), rgba(255,102,196,0.1))',
-              border: '1px solid rgba(145,113,189,0.3)',
-              borderRadius: 14, padding: '1.5rem', textAlign: 'center'
-            }}>
-              <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 8 }}>You've used your free demo ✦</p>
-              <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Ready for unlimited access?</p>
-              <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16, lineHeight: 1.6 }}>
-                Unlimited listings · 10 AI mockups per product · All platforms · $19 once, yours forever.
-              </p>
-              <a href={buyUrl} target="_blank" rel="noopener noreferrer" style={{
-                display: 'block', width: '100%', padding: '14px 24px',
-                background: 'linear-gradient(135deg, var(--purple), var(--pink))',
-                color: '#fff', border: 'none', borderRadius: 12,
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontSize: 15, fontWeight: 600, textDecoration: 'none', textAlign: 'center'
-              }}>Get Lifetime Access — $19</a>
+          {/* Demo already used message */}
+          {showUsedMsg && (
+            <div style={{ marginTop: '1rem', background: 'linear-gradient(135deg, #fff5fb, #f5f0ff)', border: '2px solid rgba(145,113,189,0.25)', borderRadius: 14, padding: '1.25rem', textAlign: 'center' }}>
+              <p style={{ fontSize: 22, marginBottom: 6 }}>🎉</p>
+              <p style={{ fontWeight: 700, fontSize: 15, color: '#1a1a2e', marginBottom: 6 }}>You've used your free listing!</p>
+              <p style={{ fontSize: 13, color: '#666', marginBottom: 14, lineHeight: 1.6 }}>Get unlimited listings, 10 AI mockups per product, and all platforms for just $19 — yours forever.</p>
+              <a href={import.meta.env.VITE_STRIPE_URL} target="_blank" rel="noopener noreferrer" style={{ display: 'block', padding: '12px 24px', background: 'linear-gradient(135deg, #9171BD, #FF66C4)', color: '#fff', borderRadius: 10, fontWeight: 700, fontSize: 14, textDecoration: 'none', boxShadow: '0 4px 15px rgba(145,113,189,0.3)' }}>
+                Get Lifetime Access — $19 ✨
+              </a>
             </div>
           )}
 
           {image && !used && (
             <div style={{ marginTop: '1rem' }}>
-              <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--faint)', marginBottom: 8 }}>Selling on</p>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#999', marginBottom: 8 }}>Selling on</p>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: '1rem' }}>
                 {PLATFORMS.map(p => (
-                  <button key={p} onClick={() => setPlatform(p)} style={{
-                    padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500,
-                    cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    border: platform === p ? '1px solid var(--purple)' : '1px solid var(--border)',
-                    background: platform === p ? 'var(--purple)' : 'transparent',
-                    color: platform === p ? '#fff' : 'var(--muted)', transition: 'all .15s'
-                  }}>{p}</button>
+                  <button key={p} onClick={() => setPlatform(p)} style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", border: platform === p ? '2px solid #9171BD' : '1.5px solid #e0e0e0', background: platform === p ? '#9171BD' : '#fff', color: platform === p ? '#fff' : '#666', transition: 'all .15s' }}>{p}</button>
                 ))}
               </div>
-              <button onClick={generate} disabled={loading} style={{
-                width: '100%', padding: '14px 24px',
-                background: 'linear-gradient(135deg, var(--purple), var(--pink))',
-                color: '#fff', border: 'none', borderRadius: 12,
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontSize: 15, fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.5 : 1,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10
-              }}>
-                {loading ? <><span className="spinner" />Generating...</> : <>✦ Generate My Free Listing</>}
+              <button onClick={generate} disabled={loading} style={{ width: '100%', padding: '14px 24px', background: 'linear-gradient(135deg, #9171BD, #FF66C4)', color: '#fff', border: 'none', borderRadius: 12, fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 4px 15px rgba(145,113,189,0.35)', transition: 'all .2s' }}>
+                {loading ? <><span className="spinner" />Generating...</> : <>✨ Generate My Free Listing</>}
               </button>
             </div>
           )}
         </div>
 
         <div>
-          {!result && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 280, gap: 12, border: '1px solid var(--border)', borderRadius: 18, color: 'var(--faint)', fontSize: 14, textAlign: 'center', padding: '2rem' }}>
-              <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(145,113,189,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>✦</div>
-              <p>Your listing will appear here.<br />Upload a photo to get started.</p>
+          {!result && !loading && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 280, gap: 12, border: '2px dashed #e8e8e8', borderRadius: 18, color: '#bbb', fontSize: 14, textAlign: 'center', padding: '2rem', background: '#fafafa' }}>
+              <div style={{ fontSize: 36 }}>✨</div>
+              <p style={{ color: '#aaa' }}>Your listing will appear here.<br />Upload a photo to get started.</p>
+            </div>
+          )}
+
+          {loading && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 280, gap: 14, border: '2px dashed #e8e8e8', borderRadius: 18, background: '#fafafa' }}>
+              <span className="spinner-dark" style={{ width: 32, height: 32 }} />
+              <p style={{ color: '#888', fontSize: 14 }}>Reading your product...</p>
             </div>
           )}
 
           {result && !result.error && (
-            <div>
-              <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: '1.25rem', marginBottom: 12 }}>
-                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--faint)', marginBottom: 8 }}>Title</div>
-                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, lineHeight: 1.45 }}>{result.title}</p>
-              </div>
-              <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: '1.25rem', marginBottom: 12 }}>
-                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--faint)', marginBottom: 8 }}>Description</div>
-                <p style={{ fontSize: 13, lineHeight: 1.8, color: 'rgba(244,240,255,0.65)' }}>{result.description}</p>
-              </div>
-              <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: '1.25rem', marginBottom: 12 }}>
-                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--faint)', marginBottom: 8 }}>Keywords</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                  {result.keywords?.map((k, i) => (
-                    <span key={i} style={{ fontSize: 12, fontWeight: 500, padding: '4px 11px', borderRadius: 20, background: 'rgba(145,113,189,0.15)', color: '#c4aee8', border: '1px solid rgba(145,113,189,0.25)' }}>{k}</span>
-                  ))}
+            <div style={{ animation: 'pop 0.3s ease both' }}>
+              {[['Title', result.title, null], ['Description', result.description, null]].map(([label, val]) => (
+                <div key={label} style={{ background: '#fff', border: '1.5px solid #f0f0f0', borderRadius: 14, padding: '1.25rem', marginBottom: 10, boxShadow: '0 2px 10px rgba(0,0,0,0.04)' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.15em', textTransform: 'uppercase', color: '#bbb', marginBottom: 8 }}>{label}</div>
+                  <p style={{ fontSize: label === 'Title' ? 15 : 13, fontWeight: label === 'Title' ? 700 : 400, lineHeight: label === 'Title' ? 1.4 : 1.8, color: '#1a1a2e' }}>{val}</p>
                 </div>
+              ))}
+              <div style={{ background: '#fff', border: '1.5px solid #f0f0f0', borderRadius: 14, padding: '1.25rem', marginBottom: 10, boxShadow: '0 2px 10px rgba(0,0,0,0.04)' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.15em', textTransform: 'uppercase', color: '#bbb', marginBottom: 8 }}>Keywords</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{result.keywords?.map((k, i) => <span key={i} style={pill}>{k}</span>)}</div>
               </div>
+
               {/* Mockups */}
               {(mockups.length > 0 || mockupLoading) && (
-                <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: '1.25rem', marginBottom: 12 }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--faint)', marginBottom: 10 }}>
+                <div style={{ background: '#fff', border: '1.5px solid #f0f0f0', borderRadius: 14, padding: '1.25rem', marginBottom: 10, boxShadow: '0 2px 10px rgba(0,0,0,0.04)' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.15em', textTransform: 'uppercase', color: '#bbb', marginBottom: 10 }}>
                     Sample Mockups {mockupLoading ? '— generating...' : `(${mockups.length}/2)`}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                     {mockups.map((url, i) => (
-                      <div key={i} style={{ borderRadius: 8, overflow: 'hidden', aspectRatio: '1', background: '#1a1720' }}>
+                      <div key={i} style={{ borderRadius: 10, overflow: 'hidden', aspectRatio: '1', background: '#f5f5f5' }}>
                         <img src={url} alt={`Mockup ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       </div>
                     ))}
                     {mockupLoading && mockups.length < 2 && Array.from({ length: 2 - mockups.length }).map((_, i) => (
-                      <div key={`loading-${i}`} style={{ borderRadius: 8, aspectRatio: '1', background: 'rgba(145,113,189,0.08)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span className="spinner" style={{ width: 20, height: 20, borderColor: 'rgba(145,113,189,0.3)', borderTopColor: 'var(--purple)' }} />
+                      <div key={i} style={{ borderRadius: 10, aspectRatio: '1', background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span className="spinner-dark" />
                       </div>
                     ))}
                   </div>
-                  {!mockupLoading && <p style={{ fontSize: 11, color: 'var(--faint)', marginTop: 8, textAlign: 'center' }}>Unlock 10 mockups per product with full access</p>}
+                  {!mockupLoading && <p style={{ fontSize: 11, color: '#bbb', marginTop: 8, textAlign: 'center' }}>Unlock 10 mockups per product with full access</p>}
                 </div>
               )}
 
-              <div style={{ background: 'linear-gradient(135deg, rgba(145,113,189,0.15), rgba(255,102,196,0.1))', border: '1px solid rgba(145,113,189,0.3)', borderRadius: 14, padding: '1.5rem', textAlign: 'center' }}>
-                <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 8 }}>That's your free listing ✦</p>
-                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Ready to unlock everything?</p>
-                <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16, lineHeight: 1.6 }}>Unlimited listings · 10 AI mockups · All platforms · $19 once, yours forever.</p>
-                <button onClick={onBuy} style={{ width: '100%', padding: '14px 24px', background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: '#fff', border: 'none', borderRadius: 12, fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
-                  Get Lifetime Access — $19
-                </button>
+              <div style={{ background: 'linear-gradient(135deg, #fff5fb, #f5f0ff)', border: '2px solid rgba(145,113,189,0.2)', borderRadius: 14, padding: '1.5rem', textAlign: 'center' }}>
+                <p style={{ fontSize: 13, color: '#888', marginBottom: 6 }}>That's your free listing ✨</p>
+                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 900, color: '#1a1a2e', marginBottom: 10 }}>Ready to unlock everything?</p>
+                <p style={{ fontSize: 13, color: '#666', marginBottom: 16, lineHeight: 1.6 }}>Unlimited listings · 10 AI mockups · All platforms · $19 once, yours forever.</p>
+                <a href={import.meta.env.VITE_STRIPE_URL} target="_blank" rel="noopener noreferrer" style={{ display: 'block', padding: '14px 24px', background: 'linear-gradient(135deg, #9171BD, #FF66C4)', color: '#fff', borderRadius: 12, fontWeight: 700, fontSize: 15, textDecoration: 'none', boxShadow: '0 4px 15px rgba(145,113,189,0.35)' }}>
+                  Get Lifetime Access — $19 ✨
+                </a>
               </div>
             </div>
           )}
 
           {result?.error && (
-            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: '1.25rem' }}>
-              <p style={{ color: 'var(--pink)', fontSize: 14 }}>{result.error}</p>
+            <div style={{ background: '#fff5f5', border: '1.5px solid #ffcccc', borderRadius: 14, padding: '1.25rem' }}>
+              <p style={{ color: '#e74c3c', fontSize: 14 }}>{result.error}</p>
             </div>
           )}
         </div>
       </div>
-      <style>{`@media (max-width: 680px) { .demo-grid { grid-template-columns: 1fr !important; } }`}</style>
     </div>
   )
 }
@@ -349,86 +249,81 @@ export default function LandingPage({ stripeUrl }) {
   const buyUrl = stripeUrl || STRIPE_URL
 
   return (
-    <div style={{ minHeight: '100vh', position: 'relative' }}>
-      <div style={BG} />
-      <div style={DOTS} />
+    <div style={{ minHeight: '100vh', background: '#FAFAFA' }}>
 
       {/* NAV */}
-      <nav style={{
-        position: 'sticky', top: 0, zIndex: 20,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '1rem 2rem',
-        background: 'rgba(26,23,32,0.9)', backdropFilter: 'blur(14px)',
-        borderBottom: '1px solid var(--border)'
-      }}>
+      <nav style={{ position: 'sticky', top: 0, zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 2rem', background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(14px)', borderBottom: '1px solid #f0f0f0', boxShadow: '0 2px 20px rgba(0,0,0,0.06)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <LogoIcon size={32} />
-          <span style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 20, letterSpacing: '-.02em' }}>
-            <span style={{ color: '#fff' }}>Snap</span>
-            <span style={{ color: '#FF66C4' }}>.</span>
-            <span style={{ color: '#9171BD' }}>List</span>
+          <span style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 20, letterSpacing: '-.02em', color: '#1a1a2e' }}>
+            Snap<span style={{ color: '#FF66C4' }}>.</span><span style={{ color: '#9171BD' }}>List</span>
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <a href={buyUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: 'var(--muted)', textDecoration: 'none', padding: '8px 16px' }}>Get access — $19</a>
-          <button onClick={() => navigate('/login')} style={{ padding: '8px 20px', borderRadius: 10, background: 'transparent', border: '1px solid rgba(145,113,189,0.4)', color: 'var(--purple)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            Log in
-          </button>
+          <a href={buyUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: '#888', textDecoration: 'none', padding: '8px 16px', fontWeight: 600 }}>Get access — $19</a>
+          <button onClick={() => navigate('/login')} style={{ padding: '9px 22px', borderRadius: 10, background: 'linear-gradient(135deg, #9171BD, #FF66C4)', border: 'none', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(145,113,189,0.3)' }}>Log in</button>
         </div>
       </nav>
 
       {/* HERO */}
-      <section style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '7rem 2rem 5rem', minHeight: '90vh' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(145,113,189,0.12)', border: '1px solid rgba(145,113,189,0.25)', borderRadius: 20, padding: '6px 16px', marginBottom: '2rem' }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--purple)' }} />
-          <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--purple)' }}>For makers, crafters & creative sellers</span>
+      <section style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '6rem 2rem 4rem', overflow: 'hidden' }}>
+        {/* Colorful background blobs */}
+        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', top: -100, right: -100, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,102,196,0.12) 0%, transparent 70%)' }} />
+          <div style={{ position: 'absolute', bottom: -50, left: -100, width: 350, height: 350, borderRadius: '50%', background: 'radial-gradient(circle, rgba(145,113,189,0.12) 0%, transparent 70%)' }} />
+          <div style={{ position: 'absolute', top: '30%', left: '20%', width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(56,182,255,0.08) 0%, transparent 70%)' }} />
         </div>
 
-        <h1 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(3.2rem, 10vw, 6.5rem)', lineHeight: .9, letterSpacing: '-.03em', marginBottom: '1.75rem' }}>
-          Stop writing listings.<br />
-          <span style={{ color: 'var(--pink)' }}>Start selling.</span>
-        </h1>
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', border: '1.5px solid rgba(145,113,189,0.2)', borderRadius: 20, padding: '8px 18px', marginBottom: '1.5rem', boxShadow: '0 4px 12px rgba(145,113,189,0.1)' }}>
+            <span style={{ fontSize: 14 }}>🎨</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#9171BD' }}>For makers, crafters & creative sellers</span>
+          </div>
 
-        <p style={{ fontSize: 'clamp(15px, 2vw, 19px)', fontWeight: 300, color: 'var(--muted)', lineHeight: 1.75, maxWidth: 560, marginBottom: '1rem' }}>
-          Upload a photo of your handmade product. Get a complete, SEO-optimized listing — title, description, keywords, category — ready to paste in seconds.
-        </p>
-        <p style={{ fontSize: 14, color: 'var(--faint)', marginBottom: '2.5rem' }}>
-          Works for Etsy · Shopify · TikTok Shop · Beacons · Payhip · and more
-        </p>
+          <h1 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(3rem, 9vw, 6rem)', lineHeight: .92, letterSpacing: '-.03em', marginBottom: '1.5rem', color: '#1a1a2e' }}>
+            Stop writing<br />listings.<br />
+            <span style={{ background: 'linear-gradient(135deg, #9171BD, #FF66C4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Start selling.</span>
+          </h1>
 
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginBottom: '3rem' }}>
-          <button onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })} style={{ padding: '16px 36px', background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: '#fff', border: 'none', borderRadius: 12, fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, fontWeight: 600, cursor: 'pointer', transition: 'all .2s' }}>
-            Try it free — no signup ↓
-          </button>
-          <a href={buyUrl} target="_blank" rel="noopener noreferrer" style={{ padding: '16px 36px', background: 'transparent', color: 'var(--text)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12, fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, fontWeight: 500, textDecoration: 'none' }}>
-            Get lifetime access — $19
-          </a>
-        </div>
+          <p style={{ fontSize: 'clamp(15px, 2vw, 18px)', fontWeight: 400, color: '#666', lineHeight: 1.75, maxWidth: 520, marginBottom: '1rem' }}>
+            Upload a photo of your handmade product. Get a complete, SEO-optimized listing — title, description, keywords, and category — ready to paste in seconds.
+          </p>
+          <p style={{ fontSize: 13, color: '#aaa', marginBottom: '2.5rem' }}>Works for Etsy · Shopify · TikTok Shop · Beacons · Payhip · and more</p>
 
-        {/* Stats */}
-        <div style={{ display: 'flex', gap: '3rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-          {[['30 sec', 'avg time per listing'], ['$19', 'one-time, no subscription'], ['10', 'AI mockups per product']].map(([stat, label]) => (
-            <div key={stat} style={{ textAlign: 'center' }}>
-              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '2rem', fontWeight: 900, background: 'linear-gradient(135deg, var(--purple), var(--pink))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{stat}</div>
-              <div style={{ fontSize: 12, color: 'var(--faint)', marginTop: 4 }}>{label}</div>
-            </div>
-          ))}
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginBottom: '3rem' }}>
+            <button onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })} style={{ padding: '16px 36px', background: 'linear-gradient(135deg, #9171BD, #FF66C4)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: '0 6px 20px rgba(145,113,189,0.35)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              Try it free ↓
+            </button>
+            <a href={buyUrl} target="_blank" rel="noopener noreferrer" style={{ padding: '16px 36px', background: '#fff', color: '#1a1a2e', border: '2px solid #e8e8e8', borderRadius: 14, fontSize: 16, fontWeight: 600, textDecoration: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              Get lifetime access — $19
+            </a>
+          </div>
+
+          {/* Stats */}
+          <div style={{ display: 'flex', gap: '2.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+            {[['30 sec', 'avg time per listing'], ['$19', 'one-time, no subscription'], ['10', 'AI mockups per product']].map(([stat, label]) => (
+              <div key={stat} style={{ textAlign: 'center' }}>
+                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '2.2rem', fontWeight: 900, background: 'linear-gradient(135deg, #9171BD, #FF66C4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{stat}</div>
+                <div style={{ fontSize: 12, color: '#aaa', marginTop: 4 }}>{label}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* HOW IT WORKS */}
-      <section style={{ position: 'relative', zIndex: 1, padding: '5rem 2rem', borderTop: '1px solid var(--border)' }}>
+      <section style={{ padding: '5rem 2rem', borderTop: '1px solid #f0f0f0', background: '#fff' }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--purple)', marginBottom: 12 }}>Simple by design</p>
-            <h2 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(2rem, 5vw, 3rem)' }}>How it works</h2>
+            <span style={{ display: 'inline-block', background: 'linear-gradient(135deg, rgba(145,113,189,0.1), rgba(255,102,196,0.1))', color: '#9171BD', fontSize: 12, fontWeight: 700, padding: '6px 16px', borderRadius: 20, marginBottom: 12 }}>Simple by design</span>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(2rem, 5vw, 3rem)', color: '#1a1a2e' }}>How it works</h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-            {HOW_IT_WORKS.map(step => (
-              <div key={step.num} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: '1.5rem' }}>
-                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '2.5rem', fontWeight: 900, background: 'linear-gradient(135deg, var(--purple), var(--pink))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: 12 }}>{step.num}</div>
-                <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>{step.title}</h3>
-                <p style={{ fontSize: 14, color: 'var(--muted)', lineHeight: 1.7 }}>{step.body}</p>
+            {HOW_IT_WORKS.map((step, i) => (
+              <div key={i} style={{ background: '#FAFAFA', border: '1.5px solid #f0f0f0', borderRadius: 18, padding: '1.75rem', textAlign: 'center', transition: 'transform .2s', cursor: 'default' }}>
+                <div style={{ fontSize: 36, marginBottom: 14 }}>{step.emoji}</div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: '#1a1a2e' }}>{step.title}</h3>
+                <p style={{ fontSize: 13, color: '#888', lineHeight: 1.7 }}>{step.body}</p>
               </div>
             ))}
           </div>
@@ -436,66 +331,60 @@ export default function LandingPage({ stripeUrl }) {
       </section>
 
       {/* DEMO */}
-      <section id="demo" style={{ position: 'relative', zIndex: 1, padding: '5rem 1.5rem', borderTop: '1px solid var(--border)' }}>
+      <section id="demo" style={{ padding: '5rem 1.5rem', borderTop: '1px solid #f0f0f0', background: 'linear-gradient(135deg, #fff5fb 0%, #f5f0ff 100%)' }}>
         <DemoSection onBuy={() => window.open(buyUrl, '_blank')} />
       </section>
 
       {/* TESTIMONIALS */}
-      <section style={{ position: 'relative', zIndex: 1, padding: '5rem 2rem', borderTop: '1px solid var(--border)' }}>
+      <section style={{ padding: '5rem 2rem', borderTop: '1px solid #f0f0f0', background: '#fff' }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--purple)', marginBottom: 12 }}>From the community</p>
-            <h2 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(2rem, 5vw, 3rem)' }}>Makers love it</h2>
+            <span style={{ display: 'inline-block', background: 'linear-gradient(135deg, rgba(56,182,255,0.1), rgba(145,113,189,0.1))', color: '#38B6FF', fontSize: 12, fontWeight: 700, padding: '6px 16px', borderRadius: 20, marginBottom: 12 }}>From the community</span>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(2rem, 5vw, 3rem)', color: '#1a1a2e' }}>Makers love it 💛</h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem' }}>
             {TESTIMONIALS.map(t => (
-              <div key={t.name} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: '1.5rem' }}>
-                <p style={{ fontSize: 14, color: 'rgba(244,240,255,0.75)', lineHeight: 1.75, marginBottom: '1.25rem', fontStyle: 'italic' }}>"{t.text}"</p>
+              <div key={t.name} style={{ background: '#FAFAFA', border: '1.5px solid #f0f0f0', borderRadius: 18, padding: '1.5rem' }}>
+                <p style={{ fontSize: 14, color: '#555', lineHeight: 1.8, marginBottom: '1.25rem', fontStyle: 'italic' }}>"{t.text}"</p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, var(--purple), var(--pink))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff' }}>
-                    {t.name[0]}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600 }}>{t.name}</div>
-                    <div style={{ fontSize: 12, color: 'var(--faint)' }}>{t.role}</div>
-                  </div>
+                  <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'linear-gradient(135deg, #9171BD, #FF66C4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: '#fff' }}>{t.name[0]}</div>
+                  <div><div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a2e' }}>{t.name}</div><div style={{ fontSize: 12, color: '#aaa' }}>{t.role}</div></div>
                 </div>
               </div>
             ))}
           </div>
-          <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--faint)', marginTop: '1.5rem' }}>* Testimonials are placeholders — replace with real customer quotes once you have them</p>
+          <p style={{ textAlign: 'center', fontSize: 11, color: '#ccc', marginTop: '1.5rem' }}>* Placeholder testimonials — replace with real customer quotes</p>
         </div>
       </section>
 
       {/* PRICING */}
-      <section style={{ position: 'relative', zIndex: 1, padding: '5rem 2rem', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--purple)', marginBottom: 12 }}>Simple pricing</p>
-        <h2 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(2rem, 5vw, 3rem)', marginBottom: '0.5rem' }}>One price. Forever yours.</h2>
-        <p style={{ fontSize: 15, color: 'var(--muted)', marginBottom: '3rem' }}>No monthly fees. No usage limits. No surprises.</p>
+      <section style={{ padding: '5rem 2rem', borderTop: '1px solid #f0f0f0', background: 'linear-gradient(135deg, #f5f0ff 0%, #fff5fb 100%)', textAlign: 'center' }}>
+        <span style={{ display: 'inline-block', background: 'linear-gradient(135deg, #9171BD, #FF66C4)', color: '#fff', fontSize: 12, fontWeight: 700, padding: '6px 16px', borderRadius: 20, marginBottom: 16 }}>Simple pricing</span>
+        <h2 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(2rem, 5vw, 3rem)', color: '#1a1a2e', marginBottom: 8 }}>One price. Forever yours.</h2>
+        <p style={{ fontSize: 15, color: '#888', marginBottom: '3rem' }}>No monthly fees. No usage limits. No surprises.</p>
 
-        <div style={{ maxWidth: 440, margin: '0 auto', background: 'rgba(145,113,189,0.08)', border: '1px solid rgba(145,113,189,0.25)', borderRadius: 20, padding: '2.5rem' }}>
+        <div style={{ maxWidth: 440, margin: '0 auto', background: '#fff', border: '2px solid rgba(145,113,189,0.2)', borderRadius: 24, padding: '2.5rem', boxShadow: '0 8px 40px rgba(145,113,189,0.12)' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 6, marginBottom: '1.5rem' }}>
-            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: '4rem', fontWeight: 900, background: 'linear-gradient(135deg, var(--purple), var(--pink))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>$19</span>
-            <span style={{ fontSize: 14, color: 'var(--muted)' }}>one-time · lifetime</span>
+            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: '4rem', fontWeight: 900, background: 'linear-gradient(135deg, #9171BD, #FF66C4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>$19</span>
+            <span style={{ fontSize: 14, color: '#aaa' }}>one-time · lifetime</span>
           </div>
           <ul style={{ listStyle: 'none', textAlign: 'left', marginBottom: '2rem' }}>
             {['Unlimited listing generations', '10 AI product mockups per upload', 'Etsy, Shopify, TikTok Shop, Beacons & more', 'Title, description, keywords & category', 'Price suggestions & occasion tags', 'Login from any device, any time', 'Yours forever — no subscription'].map(f => (
-              <li key={f} style={{ fontSize: 14, color: 'rgba(244,240,255,0.75)', padding: '8px 0', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'linear-gradient(135deg, var(--purple), var(--pink))', flexShrink: 0 }} />
-                {f}
+              <li key={f} style={{ fontSize: 14, color: '#444', padding: '9px 0', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid #f5f5f5' }}>
+                <span style={{ fontSize: 16 }}>✅</span>{f}
               </li>
             ))}
           </ul>
-          <a href={buyUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'block', width: '100%', padding: '15px 24px', background: 'linear-gradient(135deg, var(--purple), var(--pink))', color: '#fff', border: 'none', borderRadius: 12, fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, fontWeight: 600, textDecoration: 'none', textAlign: 'center' }}>
-            Get Lifetime Access — $19
+          <a href={buyUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'block', width: '100%', padding: '16px 24px', background: 'linear-gradient(135deg, #9171BD, #FF66C4)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 16, fontWeight: 700, textDecoration: 'none', textAlign: 'center', boxShadow: '0 6px 20px rgba(145,113,189,0.35)' }}>
+            Get Lifetime Access — $19 ✨
           </a>
-          <p style={{ fontSize: 12, color: 'var(--faint)', marginTop: 12 }}>Try it free first — no account needed ↑</p>
+          <p style={{ fontSize: 12, color: '#bbb', marginTop: 12 }}>Try it free first — no account needed ↑</p>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer style={{ position: 'relative', zIndex: 1, borderTop: '1px solid var(--border)', padding: '2rem', textAlign: 'center', fontSize: 13, color: 'var(--faint)' }}>
-        <p>© {new Date().getFullYear()} SnapList · Built by <a href="https://danicreatesit.com" style={{ color: 'var(--purple)', textDecoration: 'none' }}>Dani Creates It</a></p>
+      <footer style={{ borderTop: '1px solid #f0f0f0', padding: '2rem', textAlign: 'center', fontSize: 13, color: '#bbb', background: '#fff' }}>
+        <p>© {new Date().getFullYear()} SnapList · Built by <a href="https://danicreatesit.com" style={{ color: '#9171BD', textDecoration: 'none', fontWeight: 600 }}>Dani Creates It</a></p>
       </footer>
     </div>
   )
