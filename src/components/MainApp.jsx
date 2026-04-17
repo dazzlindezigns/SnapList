@@ -308,7 +308,7 @@ export default function MainApp() {
         </div>
       </div>
 
-      <div className="workspace" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', maxWidth: 1200, margin: '0 auto', padding: '2rem', background: '#FAFAFA', minHeight: 'calc(100vh - 60px)' }}> gap: '2rem', maxWidth: 1200, margin: '0 auto', padding: '2rem' }}>
+      <div className="workspace" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', maxWidth: 1200, margin: '0 auto', padding: '2rem', background: '#FAFAFA', minHeight: 'calc(100vh - 60px)' }}>
         {/* LEFT PANEL */}
         <div>
           <p style={s.secLabel}>Your Product Photo</p>
