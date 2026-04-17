@@ -335,7 +335,7 @@ export default function LandingPage({ stripeUrl }) {
                 <div>
                   <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#bbb', marginBottom: 6 }}>Your Product Photo</div>
                   <div style={{ borderRadius: 14, overflow: 'hidden', aspectRatio: '1', background: '#f5f0ff' }}>
-                    <img src="/hero-product.png" alt="Product" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src="/mockup-1.png" alt="Product" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                   <button style={{ width: '100%', marginTop: 10, padding: '10px', background: 'linear-gradient(135deg, #9171BD, #FF66C4)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                     ✨ Generate Listing + Mockups
@@ -367,14 +367,9 @@ export default function LandingPage({ stripeUrl }) {
                   <span style={{ background: 'linear-gradient(135deg, #9171BD, #FF66C4)', color: '#fff', fontSize: 9, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>PRODUCT MOCKUPS (10/10)</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
-                  {[
-                    { src: '/hero-mockups.png', style: {} },
-                    { src: '/hero-product.png', style: { filter: 'brightness(1.05) saturate(1.1)' } },
-                    { src: '/hero-mockups.png', style: { filter: 'hue-rotate(20deg) saturate(1.2)', objectPosition: 'right center' } },
-                    { src: '/hero-product.png', style: { filter: 'brightness(0.7) contrast(1.1)', objectPosition: 'center top' } },
-                  ].map((m, i) => (
+                  {['/mockup-1.png', '/mockup-2.png', '/mockup-3.png', '/mockup-4.png'].map((src, i) => (
                     <div key={i} style={{ borderRadius: 10, overflow: 'hidden', aspectRatio: '1', background: '#f5f0ff' }}>
-                      <img src={m.src} alt={`Mockup ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', ...m.style }} />
+                      <img src={src} alt={`Mockup ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                   ))}
                 </div>
