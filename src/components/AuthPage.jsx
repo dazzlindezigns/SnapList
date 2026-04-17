@@ -20,8 +20,8 @@ const DOTS = {
   WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)'
 }
 
-export default function AuthPage({ onAuth, onBack }) {
-  const [mode, setMode] = useState('login') // login | signup | forgot
+export default function AuthPage({ onAuth, onBack, defaultMode = 'login' }) {
+  const [mode, setMode] = useState(defaultMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)

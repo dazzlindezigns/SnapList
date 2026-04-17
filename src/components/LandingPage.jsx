@@ -57,8 +57,41 @@ function DemoSection({ onBuy }) {
   const [drag, setDrag] = useState(false)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
+  const [mockups, setMockups] = useState([])
+  const [mockupLoading, setMockupLoading] = useState(false)
   const [used, setUsed] = useState(false)
   const fileRef = useRef()
+
+  const DEMO_MOCKUP_PROMPTS = [
+    'professional product photo on clean white background, studio lighting, e-commerce style, handmade craft product',
+    'lifestyle product photo on rustic wooden table with soft natural light, handmade craft item, cozy home setting',
+  ]
+
+  const generateMockups = async (productTitle) => {
+    setMockupLoading(true)
+    const generated = []
+    for (const prompt of DEMO_MOCKUP_PROMPTS) {
+      try {
+        const res = await fetch('/api/mockup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'dall-e-3',
+            prompt: `${prompt}. Product: ${productTitle}`,
+            n: 1,
+            size: '1024x1024',
+            quality: 'standard'
+          })
+        })
+        const data = await res.json()
+        if (data.data?.[0]?.url) {
+          generated.push(data.data[0].url)
+          setMockups([...generated])
+        }
+      } catch { /* skip failed mockup */ }
+    }
+    setMockupLoading(false)
+  }
 
   const handleFile = (file) => {
     if (!file || !file.type.startsWith('image/') || used) return
@@ -111,8 +144,11 @@ function DemoSection({ onBuy }) {
       const text = data.content?.find(b => b.type === 'text')?.text || ''
       const jsonMatch = text.match(/\{[\s\S]*\}/)
       if (!jsonMatch) throw new Error('No JSON found in response')
-      setResult(JSON.parse(jsonMatch[0]))
+      const parsed = JSON.parse(jsonMatch[0])
+      setResult(parsed)
       setUsed(true)
+      // Generate 2 demo mockups after listing
+      generateMockups(parsed.title || 'handmade product')
     } catch (err) {
       setResult({ error: err.message || 'Something went wrong — please try again.' })
     }
@@ -216,6 +252,28 @@ function DemoSection({ onBuy }) {
                   ))}
                 </div>
               </div>
+              {/* Mockups */}
+              {(mockups.length > 0 || mockupLoading) && (
+                <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: '1.25rem', marginBottom: 12 }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--faint)', marginBottom: 10 }}>
+                    Sample Mockups {mockupLoading ? '— generating...' : `(${mockups.length}/2)`}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    {mockups.map((url, i) => (
+                      <div key={i} style={{ borderRadius: 8, overflow: 'hidden', aspectRatio: '1', background: '#1a1720' }}>
+                        <img src={url} alt={`Mockup ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    ))}
+                    {mockupLoading && mockups.length < 2 && Array.from({ length: 2 - mockups.length }).map((_, i) => (
+                      <div key={`loading-${i}`} style={{ borderRadius: 8, aspectRatio: '1', background: 'rgba(145,113,189,0.08)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span className="spinner" style={{ width: 20, height: 20, borderColor: 'rgba(145,113,189,0.3)', borderTopColor: 'var(--purple)' }} />
+                      </div>
+                    ))}
+                  </div>
+                  {!mockupLoading && <p style={{ fontSize: 11, color: 'var(--faint)', marginTop: 8, textAlign: 'center' }}>Unlock 10 mockups per product with full access</p>}
+                </div>
+              )}
+
               <div style={{ background: 'linear-gradient(135deg, rgba(145,113,189,0.15), rgba(255,102,196,0.1))', border: '1px solid rgba(145,113,189,0.3)', borderRadius: 14, padding: '1.5rem', textAlign: 'center' }}>
                 <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 8 }}>That's your free listing ✦</p>
                 <p style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Ready to unlock everything?</p>

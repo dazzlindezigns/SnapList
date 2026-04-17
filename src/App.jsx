@@ -10,8 +10,18 @@ export default function App() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState('landing')
+  const [authMode, setAuthMode] = useState('login')
 
   useEffect(() => {
+    // Check if coming from Stripe payment redirect
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('signup') === 'true') {
+      setView('auth')
+      setAuthMode('signup')
+      // Clean up URL
+      window.history.replaceState({}, '', '/')
+    }
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         const { data: profile } = await supabase
@@ -63,6 +73,6 @@ export default function App() {
   }
 
   if (view === 'app' && user) return <MainApp user={user} onSignOut={handleSignOut} />
-  if (view === 'auth') return <AuthPage onAuth={handleAuth} onBack={() => setView('landing')} />
-  return <LandingPage onLogin={() => setView('auth')} stripeUrl={STRIPE_URL} />
+  if (view === 'auth') return <AuthPage onAuth={handleAuth} onBack={() => setView('landing')} defaultMode={authMode} />
+  return <LandingPage onLogin={() => { setAuthMode('login'); setView('auth') }} stripeUrl={STRIPE_URL} />
 }
