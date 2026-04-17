@@ -34,22 +34,32 @@ export default function MainApp() {
   const [skinTone, setSkinTone] = useState('none')
   const fileRef = useRef()
 
-  const SKIN_TONES = [
+  const ETHNICITIES = [
     { value: 'none', label: 'No models' },
-    { value: 'Black', label: '✊🏿 Black' },
-    { value: 'African American', label: '🇺🇸 African American' },
-    { value: 'Latina', label: '🌺 Latina' },
-    { value: 'Asian', label: '🌸 Asian' },
-    { value: 'South Asian', label: '✨ South Asian' },
-    { value: 'Middle Eastern', label: '🌙 Middle Eastern' },
-    { value: 'White', label: '☁️ White' },
-    { value: 'Mixed race', label: '🌈 Mixed' },
+    { value: 'Black', label: 'Black' },
+    { value: 'African American', label: 'African American' },
+    { value: 'Latina', label: 'Latina/Latino' },
+    { value: 'Asian', label: 'Asian' },
+    { value: 'South Asian', label: 'South Asian' },
+    { value: 'Middle Eastern', label: 'Middle Eastern' },
+    { value: 'White', label: 'White' },
+    { value: 'Mixed race', label: 'Mixed' },
   ]
+
+  const MODEL_TYPES = [
+    { value: 'woman', label: 'Woman' },
+    { value: 'man', label: 'Man' },
+    { value: 'girl', label: 'Girl' },
+    { value: 'boy', label: 'Boy' },
+    { value: 'person', label: 'Any' },
+  ]
+
+  const [modelType, setModelType] = useState('woman')
 
   const handleReset = () => {
     setImage(null); setImageFile(null); setResult(null)
     setMockups([]); setMockupProgress(0); setCopied({})
-    setProductDesc(''); setSkinTone('none')
+    setProductDesc(''); setSkinTone('none'); setModelType('woman')
     if (fileRef.current) fileRef.current.value = ''
   }
 
@@ -137,7 +147,7 @@ export default function MainApp() {
       const results = await Promise.allSettled(
         batch.map(async (promptText, j) => {
           const skinInstruction = skinTone !== 'none'
-            ? ` Include a ${skinTone} model or person naturally interacting with or using the product.`
+            ? ` Include a ${skinTone} ${modelType} naturally interacting with or using the product.`
             : ''
           const descInstruction = productDesc ? ` Product context: ${productDesc}.` : ''
           const prompt = `Take this product and place it naturally into the following scene: ${promptText}.${descInstruction}${skinInstruction} Keep the product looking exactly as it does in the photo. Professional product photography, high quality, realistic lighting.`
@@ -299,20 +309,18 @@ export default function MainApp() {
                 />
               </div>
 
-              {/* Skin tone selector */}
+              {/* Model selector */}
               <div style={{ marginBottom: '1.25rem' }}>
-                <p style={s.secLabel}>Model ethnicity in mockups? <span style={{ color: '#bbb', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></p>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  {SKIN_TONES.map(t => (
-                    <button key={t.value} onClick={() => setSkinTone(t.value)} style={{
-                      padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                      cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      border: skinTone === t.value ? '2px solid #9171BD' : '1.5px solid #e8e8e8',
-                      background: skinTone === t.value ? '#9171BD' : '#fff',
-                      color: skinTone === t.value ? '#fff' : '#666',
-                      transition: 'all .15s'
-                    }}>{t.label}</button>
-                  ))}
+                <p style={s.secLabel}>Model in mockups? <span style={{ color: '#bbb', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <select value={skinTone} onChange={e => setSkinTone(e.target.value)} style={{ flex: 1, padding: '9px 12px', borderRadius: 10, border: '1.5px solid rgba(145,113,189,0.2)', background: '#fff', color: '#1a1a2e', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600, outline: 'none', cursor: 'pointer' }}>
+                    {ETHNICITIES.map(e => <option key={e.value} value={e.value}>{e.label}</option>)}
+                  </select>
+                  {skinTone !== 'none' && (
+                    <select value={modelType} onChange={e => setModelType(e.target.value)} style={{ flex: 1, padding: '9px 12px', borderRadius: 10, border: '1.5px solid rgba(145,113,189,0.2)', background: '#fff', color: '#1a1a2e', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600, outline: 'none', cursor: 'pointer' }}>
+                      {MODEL_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                    </select>
+                  )}
                 </div>
               </div>
 
