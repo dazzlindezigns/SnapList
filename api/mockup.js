@@ -22,7 +22,7 @@ export default async function handler(req, res) {
   try {
     console.log(`Calling ${model}...`)
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 55000) // 55s timeout, under Vercel's 60s limit
+    const timeout = setTimeout(() => controller.abort(), 290000) // 290s timeout, under Vercel Pro's 300s limit
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
