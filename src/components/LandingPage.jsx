@@ -349,6 +349,10 @@ export default function LandingPage({ stripeUrl }) {
                     <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: '#bbb', marginBottom: 4 }}>Title</div>
                     <p style={{ fontSize: 12, fontWeight: 700, color: '#1a1a2e', lineHeight: 1.4, margin: 0 }}>Heart Keychain Set · Candy Color Valentine Bag Charm</p>
                   </div>
+                  <div style={{ background: '#fafafa', border: '1.5px solid #f0f0f0', borderRadius: 12, padding: '10px', marginBottom: 8 }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: '#bbb', marginBottom: 4 }}>Description</div>
+                    <p style={{ fontSize: 11, color: '#555', lineHeight: 1.6, margin: 0 }}>Adorable pastel conversation heart keychains — perfect Valentine's gift or everyday bag charm. Each piece is handcrafted with care and ships ready to gift.</p>
+                  </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                     {['keychain gift', 'valentine', 'heart charm', 'cute bag tag'].map(k => (
                       <span key={k} style={{ fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 12, background: 'rgba(145,113,189,0.1)', color: '#7c5cbf', border: '1px solid rgba(145,113,189,0.15)' }}>{k}</span>
