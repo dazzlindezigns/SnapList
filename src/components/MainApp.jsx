@@ -256,7 +256,6 @@ export default function MainApp() {
     setMockupProgress(0)
     const b64 = await toBase64(imageFile)
     const newMockups = []
-    const publicUrls = []
     const BATCH_SIZE = 3
     const shuffled = [...DEFAULT_SCENES].sort(() => Math.random() - 0.5)
     const listingId = passedListingId || currentListingId
@@ -275,33 +274,24 @@ export default function MainApp() {
         if (data.b64) return { url: `data:${data.mimeType || 'image/png'};base64,${data.b64}`, label: promptText.split(',')[0] }
         return null
       }))
-
-      for (const r of results) {
-        if (r.status === 'fulfilled' && r.value) {
-          const mockupIndex = newMockups.length
-          newMockups.push(r.value)
-          // Upload to storage in background
-          if (listingId) {
-            uploadMockupToStorage(r.value.url, listingId, mockupIndex).then(publicUrl => {
-              if (publicUrl) {
-                publicUrls[mockupIndex] = publicUrl
-                // Save batch of URLs as they accumulate
-                if (publicUrls.filter(Boolean).length === newMockups.length) {
-                  updateListingMockups(listingId, publicUrls.filter(Boolean))
-                }
-              }
-            })
-          }
-        }
-      }
+      results.forEach(r => { if (r.status === 'fulfilled' && r.value) newMockups.push(r.value) })
       setMockups([...newMockups])
       setMockupProgress(Math.min(i + BATCH_SIZE, shuffled.length))
     }
 
-    // Final save of all public URLs once all uploads settle
-    if (listingId && publicUrls.filter(Boolean).length > 0) {
-      await updateListingMockups(listingId, publicUrls.filter(Boolean))
+    // Upload all mockups to Storage, then save all URLs in one DB update
+    if (listingId && newMockups.length > 0) {
+      const uploadResults = await Promise.all(
+        newMockups.map((m, i) => uploadMockupToStorage(m.url, listingId, i))
+      )
+      const publicUrls = uploadResults.filter(Boolean)
+      if (publicUrls.length > 0) {
+        await updateListingMockups(listingId, publicUrls)
+        // Refresh history so thumbnails show immediately
+        await loadHistory()
+      }
     }
+
     setMockupLoading(false)
   }
 
