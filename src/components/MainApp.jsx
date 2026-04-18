@@ -95,6 +95,26 @@ export default function MainApp() {
     setHistoryLoading(false)
   }
 
+  const uploadMockupToStorage = async (b64DataUrl, listingId, index) => {
+    try {
+      // Convert base64 data URL to blob
+      const res = await fetch(b64DataUrl)
+      const blob = await res.blob()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return null
+      const path = `${session.user.id}/${listingId}/mockup-${index}.png`
+      const { error } = await supabase.storage
+        .from('mockups')
+        .upload(path, blob, { contentType: 'image/png', upsert: true })
+      if (error) { console.error('Storage upload error:', error); return null }
+      const { data: { publicUrl } } = supabase.storage.from('mockups').getPublicUrl(path)
+      return publicUrl
+    } catch (err) {
+      console.error('Upload failed:', err)
+      return null
+    }
+  }
+
   const saveListing = async (listingData, mockupData) => {
     setSaving(true)
     const { data: { session } } = await supabase.auth.getSession()
@@ -122,15 +142,15 @@ export default function MainApp() {
     }
     if (error) console.error('Save error:', error)
     setSaving(false)
+    return data
   }
 
-  const updateListingMockups = async (id, mockupData) => {
+  const updateListingMockups = async (id, publicUrls) => {
     await supabase
       .from('listings')
-      .update({ mockups: mockupData })
+      .update({ mockups: publicUrls })
       .eq('id', id)
-    // Update history preview
-    setHistory(prev => prev.map(h => h.id === id ? { ...h, mockups: mockupData } : h))
+    setHistory(prev => prev.map(h => h.id === id ? { ...h, mockups: publicUrls } : h))
   }
 
   const deleteListing = async (id) => {
@@ -218,25 +238,29 @@ export default function MainApp() {
       if (!parsed) { const match = text.match(/\{[\s\S]*\}/); if (match) try { parsed = JSON.parse(match[0]) } catch {} }
       if (!parsed) throw new Error('Could not parse response')
       setResult(parsed)
-      // Save listing immediately (mockups added later)
-      await saveListing({ ...parsed, platform }, [])
-      // Scroll to result on mobile
+      const saved = await saveListing({ ...parsed, platform }, [])
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200)
+      return saved?.id || null
     } catch (err) {
       setResult({ error: err.message || 'Something went wrong — please try again.' })
+      return null
+    } finally {
+      setListingLoading(false)
     }
-    setListingLoading(false)
   }
 
-  const generateMockups = async (reset = true) => {
+  const generateMockups = async (reset = true, passedListingId = null) => {
     if (!imageFile) return
     setMockupLoading(true)
     if (reset) setMockups([])
     setMockupProgress(0)
     const b64 = await toBase64(imageFile)
     const newMockups = []
+    const publicUrls = []
     const BATCH_SIZE = 3
     const shuffled = [...DEFAULT_SCENES].sort(() => Math.random() - 0.5)
+    const listingId = passedListingId || currentListingId
+
     for (let i = 0; i < shuffled.length; i += BATCH_SIZE) {
       const batch = shuffled.slice(i, i + BATCH_SIZE)
       const results = await Promise.allSettled(batch.map(async (promptText) => {
@@ -251,13 +275,32 @@ export default function MainApp() {
         if (data.b64) return { url: `data:${data.mimeType || 'image/png'};base64,${data.b64}`, label: promptText.split(',')[0] }
         return null
       }))
-      results.forEach(r => { if (r.status === 'fulfilled' && r.value) newMockups.push(r.value) })
+
+      for (const r of results) {
+        if (r.status === 'fulfilled' && r.value) {
+          const mockupIndex = newMockups.length
+          newMockups.push(r.value)
+          // Upload to storage in background
+          if (listingId) {
+            uploadMockupToStorage(r.value.url, listingId, mockupIndex).then(publicUrl => {
+              if (publicUrl) {
+                publicUrls[mockupIndex] = publicUrl
+                // Save batch of URLs as they accumulate
+                if (publicUrls.filter(Boolean).length === newMockups.length) {
+                  updateListingMockups(listingId, publicUrls.filter(Boolean))
+                }
+              }
+            })
+          }
+        }
+      }
       setMockups([...newMockups])
       setMockupProgress(Math.min(i + BATCH_SIZE, shuffled.length))
     }
-    // Save mockups to DB
-    if (currentListingId && newMockups.length > 0) {
-      await updateListingMockups(currentListingId, newMockups.map(m => m.url))
+
+    // Final save of all public URLs once all uploads settle
+    if (listingId && publicUrls.filter(Boolean).length > 0) {
+      await updateListingMockups(listingId, publicUrls.filter(Boolean))
     }
     setMockupLoading(false)
   }
@@ -470,7 +513,10 @@ export default function MainApp() {
               </div>
 
               <button
-                onClick={async () => { await generateListing(); generateMockups() }}
+                onClick={async () => { 
+                  const listingId = await generateListing()
+                  if (listingId) generateMockups(true, listingId)
+                }}
                 disabled={listingLoading || mockupLoading}
                 style={{
                   width: '100%', padding: '14px 24px',
