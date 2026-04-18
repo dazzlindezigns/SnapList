@@ -259,6 +259,7 @@ export default function MainApp() {
     const shuffled = [...DEFAULT_SCENES].sort(() => Math.random() - 0.5)
     const listingId = passedListingId || currentListingId
     const sleep = (ms) => new Promise(r => setTimeout(r, ms))
+    let firstUploaded = false
 
     for (let i = 0; i < shuffled.length; i++) {
       const promptText = shuffled[i]
@@ -272,27 +273,39 @@ export default function MainApp() {
         })
         const data = await res.json()
         if (data.b64) {
-          newMockups.push({ url: `data:${data.mimeType || 'image/png'};base64,${data.b64}`, label: promptText.split(',')[0] })
+          const mockupUrl = `data:${data.mimeType || 'image/png'};base64,${data.b64}`
+          newMockups.push({ url: mockupUrl, label: promptText.split(',')[0] })
           setMockups([...newMockups])
+
+          // Upload first mockup immediately so thumbnail shows in history right away
+          if (!firstUploaded && listingId) {
+            firstUploaded = true
+            uploadMockupToStorage(mockupUrl, listingId, 0).then(publicUrl => {
+              if (publicUrl) {
+                // Save just the first URL so thumbnail appears immediately
+                updateListingMockups(listingId, [publicUrl])
+              }
+            })
+          }
         }
       } catch (err) {
         console.error('Mockup error:', err.message)
       }
       setMockupProgress(i + 1)
-      // Delay between requests to stay within rate limits
       if (i < shuffled.length - 1) await sleep(1500)
     }
 
-    // Upload all mockups to Storage, then save all URLs in one DB update
-    if (listingId && newMockups.length > 0) {
+    // Upload remaining mockups and do final save with all URLs
+    if (listingId && newMockups.length > 1) {
       const uploadResults = await Promise.all(
-        newMockups.map((m, i) => uploadMockupToStorage(m.url, listingId, i))
+        newMockups.slice(1).map((m, i) => uploadMockupToStorage(m.url, listingId, i + 1))
       )
-      const publicUrls = uploadResults.filter(Boolean)
-      if (publicUrls.length > 0) {
-        await updateListingMockups(listingId, publicUrls)
-        // Refresh history so thumbnails show immediately
-        await loadHistory()
+      // Get first URL from DB (already saved), combine with rest
+      const { data: current } = await supabase.from('listings').select('mockups').eq('id', listingId).single()
+      const firstUrl = current?.mockups?.[0]
+      const allUrls = [firstUrl, ...uploadResults].filter(Boolean)
+      if (allUrls.length > 0) {
+        await updateListingMockups(listingId, allUrls)
       }
     }
 

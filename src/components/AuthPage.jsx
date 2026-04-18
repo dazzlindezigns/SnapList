@@ -85,7 +85,7 @@ export default function AuthPage({ defaultMode = 'login' }) {
           <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
             {mode === 'login' && <>
               <button className="btn-ghost" onClick={() => { setMode('forgot'); reset() }}>Forgot your password?</button>
-              <button className="btn-ghost" onClick={() => { setMode('signup'); reset() }}>New here? Create an account</button>
+              <a href={import.meta.env.VITE_STRIPE_URL} target="_blank" rel="noopener noreferrer" style={{ display: 'block', width: '100%', padding: '12px', textAlign: 'center', borderRadius: 12, border: '1.5px solid #e8e8e8', background: '#fff', color: '#9171BD', fontSize: 14, fontWeight: 600, textDecoration: 'none', fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'pointer' }}>New here? Get access — $19 ✨</a>
             </>}
             {mode === 'signup' && <button className="btn-ghost" onClick={() => { setMode('login'); reset() }}>Already have an account? Log in</button>}
             {mode === 'forgot' && <button className="btn-ghost" onClick={() => { setMode('login'); reset() }}>Back to login</button>}
