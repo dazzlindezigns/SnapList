@@ -274,7 +274,7 @@ export default function LandingPage({ stripeUrl }) {
 
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'start' }} className="hero-grid">
           {/* Left — copy */}
-          <div>
+          <div className="hero-left">
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', border: '1.5px solid rgba(145,113,189,0.2)', borderRadius: 20, padding: '8px 18px', marginBottom: '1.5rem', boxShadow: '0 4px 12px rgba(145,113,189,0.1)' }}>
               <span style={{ fontSize: 14 }}>🎨</span>
               <span style={{ fontSize: 12, fontWeight: 700, color: '#9171BD' }}>For makers, crafters & creative sellers</span>
@@ -383,7 +383,16 @@ export default function LandingPage({ stripeUrl }) {
         </div>
 
         {/* Mobile single column override */}
-        <style>{`@media(max-width:768px){.hero-grid{grid-template-columns:1fr!important;}}`}</style>
+        <style>{`
+          @media(max-width:768px){
+            .hero-grid{
+              grid-template-columns:1fr!important;
+              gap:2rem!important;
+            }
+            .hero-left{ order: 2; }
+            .hero-right{ order: 1; }
+          }
+        `}</style>
       </section>
 
       {/* HOW IT WORKS */}
