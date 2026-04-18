@@ -544,7 +544,7 @@
 
   <script>
     // ⬇️ REPLACE THIS with your actual GHL webhook URL
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ9JY3V0CgQaUtR5f5QGz1P2gb7qO-s8XFpjSNvxKLd7catQvsRxnEUtMizrNYxwq__Q/exec'
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzphZ2YVZITf_qdK2-BylbvnaIPcIpmydVSF1aLQLa_rVkOfY7_4HWNPNFdBMSy0A_isQ/exec'
 
     function getChecked(name) {
       return [...document.querySelectorAll(`input[name="${name}"]:checked`)]
@@ -614,12 +614,25 @@
       }
 
       try {
-        await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        })
+        // Google Apps Script requires no-cors — use a hidden form POST instead
+        const form = document.createElement('form')
+        form.method = 'POST'
+        form.action = GOOGLE_SCRIPT_URL
+        form.target = 'hidden_iframe'
+        form.style.display = 'none'
 
+        // Pass data as a single JSON field
+        const input = document.createElement('input')
+        input.type = 'hidden'
+        input.name = 'data'
+        input.value = JSON.stringify(payload)
+        form.appendChild(input)
+
+        document.body.appendChild(form)
+        form.submit()
+        document.body.removeChild(form)
+
+        // Show success immediately — we can't wait for response due to no-cors
         document.getElementById('formWrap').classList.add('hide')
         document.getElementById('successMsg').classList.add('show')
         window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -632,5 +645,7 @@
       }
     }
   </script>
+  <!-- Hidden iframe to absorb the form POST response -->
+  <iframe name="hidden_iframe" style="display:none"></iframe>
 </body>
 </html>

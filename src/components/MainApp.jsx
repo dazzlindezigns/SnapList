@@ -256,13 +256,13 @@ export default function MainApp() {
     setMockupProgress(0)
     const b64 = await toBase64(imageFile)
     const newMockups = []
-    const BATCH_SIZE = 3
     const shuffled = [...DEFAULT_SCENES].sort(() => Math.random() - 0.5)
     const listingId = passedListingId || currentListingId
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms))
 
-    for (let i = 0; i < shuffled.length; i += BATCH_SIZE) {
-      const batch = shuffled.slice(i, i + BATCH_SIZE)
-      const results = await Promise.allSettled(batch.map(async (promptText) => {
+    for (let i = 0; i < shuffled.length; i++) {
+      const promptText = shuffled[i]
+      try {
         const skinInstruction = skinTone !== 'none' ? ` Include a ${skinTone} ${modelType} naturally interacting with the product.` : ''
         const descInstruction = productDesc ? ` Product context: ${productDesc}.` : ''
         const prompt = `Take this product and place it naturally into the following scene: ${promptText}.${descInstruction}${skinInstruction} Keep the product looking exactly as it does in the photo. Professional product photography, high quality, realistic lighting.`
@@ -271,12 +271,16 @@ export default function MainApp() {
           body: JSON.stringify({ prompt, imageBase64: b64, mimeType: 'image/jpeg' })
         })
         const data = await res.json()
-        if (data.b64) return { url: `data:${data.mimeType || 'image/png'};base64,${data.b64}`, label: promptText.split(',')[0] }
-        return null
-      }))
-      results.forEach(r => { if (r.status === 'fulfilled' && r.value) newMockups.push(r.value) })
-      setMockups([...newMockups])
-      setMockupProgress(Math.min(i + BATCH_SIZE, shuffled.length))
+        if (data.b64) {
+          newMockups.push({ url: `data:${data.mimeType || 'image/png'};base64,${data.b64}`, label: promptText.split(',')[0] })
+          setMockups([...newMockups])
+        }
+      } catch (err) {
+        console.error('Mockup error:', err.message)
+      }
+      setMockupProgress(i + 1)
+      // Delay between requests to stay within rate limits
+      if (i < shuffled.length - 1) await sleep(1500)
     }
 
     // Upload all mockups to Storage, then save all URLs in one DB update
