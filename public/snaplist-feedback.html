@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SnapList — Beta Feedback</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --purple: #9171BD;
+      --pink: #FF66C4;
+      --dark: #1a1a2e;
+      --light: #f5f0ff;
+      --white: #ffffff;
+      --gray: #888;
+      --border: rgba(145,113,189,0.2);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: linear-gradient(145deg, #f5f0ff 0%, #fff5fb 50%, #f0f4ff 100%);
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+      color: var(--dark);
+    }
+
+    .container {
+      max-width: 580px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      animation: fadeUp .5s ease both;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .logo-text {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 22px;
+      color: var(--dark);
+      letter-spacing: -.02em;
+    }
+
+    .logo-text .dot { color: var(--pink); }
+    .logo-text .list { color: var(--purple); }
+
+    .header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.8rem, 5vw, 2.4rem);
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: .75rem;
+      color: var(--dark);
+    }
+
+    .header h1 span {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header p {
+      font-size: 15px;
+      color: var(--gray);
+      line-height: 1.7;
+    }
+
+    /* Card */
+    .card {
+      background: var(--white);
+      border-radius: 24px;
+      padding: 2rem;
+      box-shadow: 0 8px 40px rgba(145,113,189,0.1);
+      border: 1.5px solid var(--border);
+      margin-bottom: 1.25rem;
+      animation: fadeUp .5s ease both;
+    }
+
+    .card:nth-child(2) { animation-delay: .05s; }
+    .card:nth-child(3) { animation-delay: .1s; }
+    .card:nth-child(4) { animation-delay: .15s; }
+    .card:nth-child(5) { animation-delay: .2s; }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--purple);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Fields */
+    .field { margin-bottom: 1.25rem; }
+    .field:last-child { margin-bottom: 0; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 6px;
+    }
+
+    label .req { color: var(--pink); margin-left: 2px; }
+    label .hint { font-weight: 400; color: var(--gray); font-size: 12px; margin-left: 4px; }
+
+    input[type="text"],
+    input[type="email"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid #ece8f5;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--dark);
+      background: #fafafa;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      -webkit-appearance: none;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(145,113,189,0.12);
+      background: #fff;
+    }
+
+    textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+
+    /* Star rating */
+    .stars {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .stars input { display: none; }
+
+    .stars label {
+      font-size: 32px;
+      cursor: pointer;
+      color: #ddd;
+      transition: color .15s, transform .15s;
+      margin: 0;
+      line-height: 1;
+    }
+
+    .stars input:checked ~ label,
+    .stars label:hover,
+    .stars label:hover ~ label { color: #ddd; }
+
+    .stars input:checked + label,
+    .stars label:hover { color: #FFD700; transform: scale(1.15); }
+
+    /* Reverse trick for star rating */
+    .stars { flex-direction: row-reverse; justify-content: flex-end; }
+    .stars label:hover,
+    .stars label:hover ~ label { color: #FFD700 !important; transform: scale(1.05); }
+    .stars input:checked ~ label { color: #FFD700; }
+
+    /* Pill selectors */
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .pill-option input { display: none; }
+
+    .pill-option label {
+      display: inline-block;
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1.5px solid #ece8f5;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray);
+      cursor: pointer;
+      transition: all .15s;
+      margin: 0;
+      background: #fafafa;
+    }
+
+    .pill-option input:checked + label {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 3px 10px rgba(145,113,189,0.3);
+    }
+
+    .pill-option label:hover {
+      border-color: var(--purple);
+      color: var(--purple);
+    }
+
+    /* Scale buttons */
+    .scale {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .scale-opt input { display: none; }
+
+    .scale-opt label {
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 10px;
+      border: 1.5px solid #ece8f5;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gray);
+      cursor: pointer;
+      transition: all .15s;
+      margin: 0;
+      background: #fafafa;
+    }
+
+    .scale-opt input:checked + label {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 3px 10px rgba(145,113,189,0.25);
+    }
+
+    .scale-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #bbb;
+      margin-top: 4px;
+      padding: 0 2px;
+    }
+
+    /* Consent checkbox */
+    .checkbox-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 1rem;
+      background: var(--light);
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 18px; height: 18px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      accent-color: var(--purple);
+      cursor: pointer;
+    }
+
+    .checkbox-row label {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.6;
+      margin: 0;
+      font-weight: 400;
+      cursor: pointer;
+    }
+
+    /* Submit */
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(145,113,189,0.35);
+      transition: opacity .2s, transform .2s;
+      margin-top: 1.5rem;
+      letter-spacing: .01em;
+    }
+
+    .submit-btn:hover { opacity: .92; transform: translateY(-1px); }
+    .submit-btn:active { transform: translateY(0); }
+    .submit-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    /* Success */
+    .success {
+      display: none;
+      text-align: center;
+      padding: 3rem 2rem;
+      background: var(--white);
+      border-radius: 24px;
+      border: 1.5px solid var(--border);
+      box-shadow: 0 8px 40px rgba(145,113,189,0.1);
+      animation: fadeUp .4s ease both;
+    }
+
+    .success.show { display: block; }
+    .form-wrap.hide { display: none; }
+
+    .success-emoji { font-size: 48px; margin-bottom: 1rem; }
+
+    .success h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.75rem;
+      font-weight: 900;
+      color: var(--dark);
+      margin-bottom: .75rem;
+    }
+
+    .success p { font-size: 15px; color: var(--gray); line-height: 1.7; }
+
+    /* Error */
+    .error-msg {
+      display: none;
+      background: #fff5f5;
+      border: 1.5px solid #ffcccc;
+      color: #e74c3c;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      margin-top: 12px;
+      text-align: center;
+    }
+
+    .error-msg.show { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media(max-width: 480px) {
+      .card { padding: 1.5rem; }
+      .scale-opt label { width: 36px; height: 36px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="header">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="20" height="20" viewBox="0 0 36 36" fill="none">
+            <path d="M10 14C10 11.8 11.8 10 14 10H22C24.2 10 26 11.8 26 14C26 16.2 24.2 18 22 18H14C11.8 18 10 19.8 10 22C10 24.2 11.8 26 14 26H26" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="27" cy="10" r="3" fill="#FF66C4"/>
+          </svg>
+        </div>
+        <span class="logo-text">Snap<span class="dot">.</span><span class="list">List</span></span>
+      </div>
+      <h1>Your feedback<br/><span>means everything.</span></h1>
+      <p>You tried it first. Tell us what you really think — the good, the bad, all of it. This helps make SnapList better for every maker.</p>
+    </div>
+
+    <div class="form-wrap" id="formWrap">
+
+      <!-- About You -->
+      <div class="card">
+        <div class="section-label">About You</div>
+        <div class="field">
+          <label>Your name <span class="req">*</span></label>
+          <input type="text" id="name" placeholder="First name is fine!" />
+        </div>
+        <div class="field">
+          <label>Email <span class="req">*</span></label>
+          <input type="email" id="email" placeholder="you@example.com" />
+        </div>
+        <div class="field">
+          <label>Where do you sell? <span class="hint">(pick all that apply)</span></label>
+          <div class="pills">
+            <div class="pill-option"><input type="checkbox" id="p-etsy" name="platform" value="Etsy"/><label for="p-etsy">Etsy</label></div>
+            <div class="pill-option"><input type="checkbox" id="p-shopify" name="platform" value="Shopify"/><label for="p-shopify">Shopify</label></div>
+            <div class="pill-option"><input type="checkbox" id="p-tiktok" name="platform" value="TikTok Shop"/><label for="p-tiktok">TikTok Shop</label></div>
+            <div class="pill-option"><input type="checkbox" id="p-beacons" name="platform" value="Beacons"/><label for="p-beacons">Beacons</label></div>
+            <div class="pill-option"><input type="checkbox" id="p-payhip" name="platform" value="Payhip"/><label for="p-payhip">Payhip</label></div>
+            <div class="pill-option"><input type="checkbox" id="p-facebook" name="platform" value="Facebook Shop"/><label for="p-facebook">Facebook Shop</label></div>
+            <div class="pill-option"><input type="checkbox" id="p-other" name="platform" value="Other"/><label for="p-other">Other</label></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>What do you sell? <span class="hint">(optional)</span></label>
+          <input type="text" id="productType" placeholder="e.g. 3D printed items, jewelry, handmade gifts..." />
+        </div>
+      </div>
+
+      <!-- Your Experience -->
+      <div class="card">
+        <div class="section-label">Your Experience</div>
+
+        <div class="field">
+          <label>Overall rating <span class="req">*</span></label>
+          <div class="stars" id="starRating">
+            <input type="radio" id="s5" name="rating" value="5"/><label for="s5" title="5 stars">★</label>
+            <input type="radio" id="s4" name="rating" value="4"/><label for="s4" title="4 stars">★</label>
+            <input type="radio" id="s3" name="rating" value="3"/><label for="s3" title="3 stars">★</label>
+            <input type="radio" id="s2" name="rating" value="2"/><label for="s2" title="2 stars">★</label>
+            <input type="radio" id="s1" name="rating" value="1"/><label for="s1" title="1 star">★</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>How easy was it to use? <span class="req">*</span></label>
+          <div class="scale" id="easeScale">
+            <div class="scale-opt"><input type="radio" id="e1" name="ease" value="1"/><label for="e1">1</label></div>
+            <div class="scale-opt"><input type="radio" id="e2" name="ease" value="2"/><label for="e2">2</label></div>
+            <div class="scale-opt"><input type="radio" id="e3" name="ease" value="3"/><label for="e3">3</label></div>
+            <div class="scale-opt"><input type="radio" id="e4" name="ease" value="4"/><label for="e4">4</label></div>
+            <div class="scale-opt"><input type="radio" id="e5" name="ease" value="5"/><label for="e5">5</label></div>
+          </div>
+          <div class="scale-labels"><span>Really hard</span><span>Super easy</span></div>
+        </div>
+
+        <div class="field">
+          <label>How good was the listing it generated? <span class="req">*</span></label>
+          <div class="scale" id="qualityScale">
+            <div class="scale-opt"><input type="radio" id="q1" name="quality" value="1"/><label for="q1">1</label></div>
+            <div class="scale-opt"><input type="radio" id="q2" name="quality" value="2"/><label for="q2">2</label></div>
+            <div class="scale-opt"><input type="radio" id="q3" name="quality" value="3"/><label for="q3">3</label></div>
+            <div class="scale-opt"><input type="radio" id="q4" name="quality" value="4"/><label for="q4">4</label></div>
+            <div class="scale-opt"><input type="radio" id="q5" name="quality" value="5"/><label for="q5">5</label></div>
+          </div>
+          <div class="scale-labels"><span>Not useful</span><span>Spot on</span></div>
+        </div>
+
+        <div class="field">
+          <label>How were the AI mockups?</label>
+          <div class="scale">
+            <div class="scale-opt"><input type="radio" id="m1" name="mockups" value="1"/><label for="m1">1</label></div>
+            <div class="scale-opt"><input type="radio" id="m2" name="mockups" value="2"/><label for="m2">2</label></div>
+            <div class="scale-opt"><input type="radio" id="m3" name="mockups" value="3"/><label for="m3">3</label></div>
+            <div class="scale-opt"><input type="radio" id="m4" name="mockups" value="4"/><label for="m4">4</label></div>
+            <div class="scale-opt"><input type="radio" id="m5" name="mockups" value="5"/><label for="m5">5</label></div>
+          </div>
+          <div class="scale-labels"><span>Disappointing</span><span>Loved them</span></div>
+        </div>
+      </div>
+
+      <!-- The Real Talk -->
+      <div class="card">
+        <div class="section-label">The Real Talk</div>
+        <div class="field">
+          <label>What did you like most? <span class="req">*</span></label>
+          <textarea id="liked" placeholder="Don't hold back — what actually impressed you?"></textarea>
+        </div>
+        <div class="field">
+          <label>What needs work? <span class="req">*</span></label>
+          <textarea id="disliked" placeholder="Anything confusing, broken, or missing? Be brutally honest."></textarea>
+        </div>
+        <div class="field">
+          <label>Anything else you wish it did?</label>
+          <textarea id="wishlist" placeholder="Features, improvements, wild ideas..."></textarea>
+        </div>
+      </div>
+
+      <!-- Would You Pay -->
+      <div class="card">
+        <div class="section-label">The $19 Question</div>
+        <div class="field">
+          <label>Would you pay $19 for lifetime access? <span class="req">*</span></label>
+          <div class="pills" style="margin-top: 8px;">
+            <div class="pill-option"><input type="radio" id="pay-yes" name="wouldPay" value="Yes — easily"/><label for="pay-yes">Yes — easily</label></div>
+            <div class="pill-option"><input type="radio" id="pay-maybe" name="wouldPay" value="Maybe — depends"/><label for="pay-maybe">Maybe — depends</label></div>
+            <div class="pill-option"><input type="radio" id="pay-no" name="wouldPay" value="Not at this stage"/><label for="pay-no">Not at this stage</label></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>How likely are you to recommend SnapList? <span class="req">*</span></label>
+          <div class="scale">
+            <div class="scale-opt"><input type="radio" id="r1" name="recommend" value="1"/><label for="r1">1</label></div>
+            <div class="scale-opt"><input type="radio" id="r2" name="recommend" value="2"/><label for="r2">2</label></div>
+            <div class="scale-opt"><input type="radio" id="r3" name="recommend" value="3"/><label for="r3">3</label></div>
+            <div class="scale-opt"><input type="radio" id="r4" name="recommend" value="4"/><label for="r4">4</label></div>
+            <div class="scale-opt"><input type="radio" id="r5" name="recommend" value="5"/><label for="r5">5</label></div>
+            <div class="scale-opt"><input type="radio" id="r6" name="recommend" value="6"/><label for="r6">6</label></div>
+            <div class="scale-opt"><input type="radio" id="r7" name="recommend" value="7"/><label for="r7">7</label></div>
+            <div class="scale-opt"><input type="radio" id="r8" name="recommend" value="8"/><label for="r8">8</label></div>
+            <div class="scale-opt"><input type="radio" id="r9" name="recommend" value="9"/><label for="r9">9</label></div>
+            <div class="scale-opt"><input type="radio" id="r10" name="recommend" value="10"/><label for="r10">10</label></div>
+          </div>
+          <div class="scale-labels"><span>Not a chance</span><span>Telling everyone</span></div>
+        </div>
+      </div>
+
+      <!-- Testimonial -->
+      <div class="card">
+        <div class="section-label">Your Words ✨</div>
+        <div class="field">
+          <label>Got a quote we can share? <span class="hint">(optional but we'd love it)</span></label>
+          <textarea id="testimonial" placeholder="Write it like you're telling a friend — honest, in your own voice. We may use this on the site with your permission." style="min-height: 100px;"></textarea>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="consent" />
+          <label for="consent">Yes, SnapList can use my quote and first name on their website and marketing materials.</label>
+        </div>
+      </div>
+
+      <button class="submit-btn" id="submitBtn" onclick="submitForm()">Send My Feedback ✨</button>
+      <div class="error-msg" id="errorMsg">Something went wrong. Please try again.</div>
+
+    </div>
+
+    <!-- Success state -->
+    <div class="success" id="successMsg">
+      <div class="success-emoji">🎉</div>
+      <h2>Thank you so much!</h2>
+      <p>Your feedback is genuinely going to shape what SnapList becomes. You're not just a tester — you're part of the story. 💜</p>
+    </div>
+
+  </div>
+
+  <script>
+    // ⬇️ REPLACE THIS with your actual GHL webhook URL
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzphZ2YVZITf_qdK2-BylbvnaIPcIpmydVSF1aLQLa_rVkOfY7_4HWNPNFdBMSy0A_isQ/exec'
+
+    function getChecked(name) {
+      return [...document.querySelectorAll(`input[name="${name}"]:checked`)]
+        .map(el => el.value).join(', ')
+    }
+
+    function getMultiChecked(name) {
+      return [...document.querySelectorAll(`input[name="${name}"]:checked`)]
+        .map(el => el.value).join(', ')
+    }
+
+    async function submitForm() {
+      const btn = document.getElementById('submitBtn')
+      const errorMsg = document.getElementById('errorMsg')
+      errorMsg.classList.remove('show')
+
+      // Required fields
+      const name = document.getElementById('name').value.trim()
+      const email = document.getElementById('email').value.trim()
+      const rating = getChecked('rating')
+      const ease = getChecked('ease')
+      const quality = getChecked('quality')
+      const liked = document.getElementById('liked').value.trim()
+      const disliked = document.getElementById('disliked').value.trim()
+      const wouldPay = getChecked('wouldPay')
+      const recommend = getChecked('recommend')
+
+      if (!name || !email || !rating || !ease || !quality || !liked || !disliked || !wouldPay || !recommend) {
+        errorMsg.textContent = 'Please fill in all required fields before submitting.'
+        errorMsg.classList.add('show')
+        errorMsg.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        return
+      }
+
+      btn.disabled = true
+      btn.textContent = 'Sending...'
+
+      const payload = {
+        // Contact info
+        name,
+        email,
+        platforms: getMultiChecked('platform'),
+        product_type: document.getElementById('productType').value.trim(),
+
+        // Ratings
+        overall_rating: rating,
+        ease_of_use: ease,
+        listing_quality: quality,
+        mockup_quality: getChecked('mockups'),
+
+        // Feedback
+        liked_most: liked,
+        needs_work: disliked,
+        feature_wishlist: document.getElementById('wishlist').value.trim(),
+
+        // Intent
+        would_pay_19: wouldPay,
+        nps_score: recommend,
+
+        // Testimonial
+        testimonial: document.getElementById('testimonial').value.trim(),
+        testimonial_consent: document.getElementById('consent').checked ? 'Yes' : 'No',
+
+        // Meta
+        source: 'SnapList Beta Feedback Form',
+        submitted_at: new Date().toISOString()
+      }
+
+      try {
+        // Google Apps Script requires no-cors — use a hidden form POST instead
+        const form = document.createElement('form')
+        form.method = 'POST'
+        form.action = GOOGLE_SCRIPT_URL
+        form.target = 'hidden_iframe'
+        form.style.display = 'none'
+
+        // Pass data as a single JSON field
+        const input = document.createElement('input')
+        input.type = 'hidden'
+        input.name = 'data'
+        input.value = JSON.stringify(payload)
+        form.appendChild(input)
+
+        document.body.appendChild(form)
+        form.submit()
+        document.body.removeChild(form)
+
+        // Show success immediately — we can't wait for response due to no-cors
+        document.getElementById('formWrap').classList.add('hide')
+        document.getElementById('successMsg').classList.add('show')
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+
+      } catch (err) {
+        btn.disabled = false
+        btn.textContent = 'Send My Feedback ✨'
+        errorMsg.textContent = 'Something went wrong. Please try again.'
+        errorMsg.classList.add('show')
+      }
+    }
+  </script>
+  <!-- Hidden iframe to absorb the form POST response -->
+  <iframe name="hidden_iframe" style="display:none"></iframe>
+</body>
+</html>
