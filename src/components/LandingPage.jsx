@@ -290,42 +290,8 @@ export default function LandingPage({ stripeUrl }) {
         </div>
 
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'start' }} className="hero-grid">
-          {/* Left — copy */}
-          <div className="hero-left">
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', border: '1.5px solid rgba(145,113,189,0.2)', borderRadius: 20, padding: '8px 18px', marginBottom: '1.5rem', boxShadow: '0 4px 12px rgba(145,113,189,0.1)' }}>
-              <span style={{ fontSize: 14 }}>🎨</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#9171BD' }}>For makers, crafters & creative sellers</span>
-            </div>
 
-            <h1 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(2.8rem, 6vw, 4.5rem)', lineHeight: .95, letterSpacing: '-.03em', marginBottom: '1.25rem', color: '#1a1a2e' }}>
-              Stop writing<br />listings.<br />
-              <span style={{ background: 'linear-gradient(135deg, #9171BD, #FF66C4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Start selling.</span>
-            </h1>
-
-            <p style={{ fontSize: 16, color: '#666', lineHeight: 1.75, maxWidth: 440, marginBottom: '0.75rem' }}>
-              Upload one photo. Get a complete, SEO-optimized listing <em>and</em> 10 professional AI mockups — in under a minute.
-            </p>
-            <p style={{ fontSize: 13, color: '#aaa', marginBottom: '2rem' }}>Etsy · Shopify · TikTok Shop · Beacons · Payhip · and more</p>
-
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: '2.5rem' }} className="btn-row">
-              <button onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })} style={{ padding: '15px 32px', background: 'linear-gradient(135deg, #9171BD, #FF66C4)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: '0 6px 20px rgba(145,113,189,0.35)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                Try it free ↓
-              </button>
-              <a href={buyUrl} target="_blank" rel="noopener noreferrer" style={{ padding: '15px 32px', background: '#fff', color: '#1a1a2e', border: '2px solid #e8e8e8', borderRadius: 14, fontSize: 16, fontWeight: 600, textDecoration: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                Get lifetime access — $19
-              </a>
-            </div>
-
-            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-              {[['30 sec', 'avg time per listing'], ['$19', 'one-time forever'], ['10', 'AI mockups per product']].map(([stat, label]) => (
-                <div key={stat}>
-                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '2rem', fontWeight: 900, background: 'linear-gradient(135deg, #9171BD, #FF66C4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{stat}</div>
-                  <div style={{ fontSize: 12, color: '#aaa', marginTop: 2 }}>{label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
+          {/* Card first in DOM = shows first on mobile naturally */}
           {/* Right — Image 2 style card */}
           <div style={{ position: 'relative' }} className="hero-right">
             {/* Floating badge — hidden on mobile, shown on desktop */}
@@ -402,29 +368,60 @@ export default function LandingPage({ stripeUrl }) {
               </div>
             </div>
           </div>
+
+          {/* Left — copy (second in DOM, moved to column 1 on desktop via CSS) */}
+          <div className="hero-left">
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', border: '1.5px solid rgba(145,113,189,0.2)', borderRadius: 20, padding: '8px 18px', marginBottom: '1.5rem', boxShadow: '0 4px 12px rgba(145,113,189,0.1)' }}>
+              <span style={{ fontSize: 14 }}>🎨</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#9171BD' }}>For makers, crafters & creative sellers</span>
+            </div>
+
+            <h1 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: 'clamp(2.8rem, 6vw, 4.5rem)', lineHeight: .95, letterSpacing: '-.03em', marginBottom: '1.25rem', color: '#1a1a2e' }}>
+              Stop writing<br />listings.<br />
+              <span style={{ background: 'linear-gradient(135deg, #9171BD, #FF66C4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Start selling.</span>
+            </h1>
+
+            <p style={{ fontSize: 16, color: '#666', lineHeight: 1.75, maxWidth: 440, marginBottom: '0.75rem' }}>
+              Upload one photo. Get a complete, SEO-optimized listing <em>and</em> 10 professional AI mockups — in under a minute.
+            </p>
+            <p style={{ fontSize: 13, color: '#aaa', marginBottom: '2rem' }}>Etsy · Shopify · TikTok Shop · Beacons · Payhip · and more</p>
+
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: '2.5rem' }} className="btn-row">
+              <button onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })} style={{ padding: '15px 32px', background: 'linear-gradient(135deg, #9171BD, #FF66C4)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: '0 6px 20px rgba(145,113,189,0.35)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                Try it free ↓
+              </button>
+              <a href={buyUrl} target="_blank" rel="noopener noreferrer" style={{ padding: '15px 32px', background: '#fff', color: '#1a1a2e', border: '2px solid #e8e8e8', borderRadius: 14, fontSize: 16, fontWeight: 600, textDecoration: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                Get lifetime access — $19
+              </a>
+            </div>
+
+            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+              {[['30 sec', 'avg time per listing'], ['$19', 'one-time forever'], ['10', 'AI mockups per product']].map(([stat, label]) => (
+                <div key={stat}>
+                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '2rem', fontWeight: 900, background: 'linear-gradient(135deg, #9171BD, #FF66C4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{stat}</div>
+                  <div style={{ fontSize: 12, color: '#aaa', marginTop: 2 }}>{label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
 
-        {/* Mobile single column override */}
+        {/* Layout: card first in DOM for mobile, CSS swaps on desktop */}
         <style>{`
+          @media(min-width:769px){
+            .hero-right{ order: 2; }
+            .hero-left{ order: 1; }
+            .hero-badge-mobile{ display: none !important; }
+          }
           @media(max-width:768px){
             .hero-grid{
-              grid-template-columns:1fr!important;
-              gap:1.5rem!important;
+              grid-template-columns: 1fr !important;
+              gap: 1.5rem !important;
             }
-            .hero-left{ order: 2; }
-            .hero-right{ 
-              order: 1;
-              padding-top: 0 !important;
-            }
-            .hero-section{ 
-              padding: 1.5rem 1rem 2rem !important;
-              overflow: visible !important;
-            }
+            .hero-section{ padding: 1.5rem 1rem 2rem !important; overflow: visible !important; }
             .hero-badge{ display: none !important; }
             .hero-badge-mobile{ display: block !important; }
-          }
-          @media(min-width:769px){
-            .hero-badge-mobile{ display: none !important; }
           }
         `}</style>
       </section>
