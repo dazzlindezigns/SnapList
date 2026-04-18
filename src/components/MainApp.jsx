@@ -341,7 +341,7 @@ export default function MainApp() {
 
               {/* Product description */}
               <div style={{ marginBottom: '1.25rem' }}>
-                <p style={s.secLabel}>What is this product? <span style={{ color: '#bbb', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional — helps AI & mockups)</span></p>
+                <p style={s.secLabel}>What is this product? <span style={{ color: '#bbb', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></p>
                 <textarea
                   value={productDesc}
                   onChange={e => setProductDesc(e.target.value)}
@@ -438,7 +438,7 @@ export default function MainApp() {
 
               {/* Generate more button — shows after mockups finish */}
               {!mockupLoading && mockups.length > 0 && (
-                <button onClick={() => generateMockups(true)} style={{
+                <button onClick={() => { setMockups([]); generateMockups(false) }} style={{
                   width: '100%', marginTop: 12, padding: '11px 24px',
                   background: 'linear-gradient(135deg, rgba(145,113,189,0.1), rgba(255,102,196,0.08))',
                   border: '1.5px solid rgba(145,113,189,0.25)',
