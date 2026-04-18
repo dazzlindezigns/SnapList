@@ -105,12 +105,23 @@ function DemoSection({ onBuy }) {
         })
       })
       const data = await res.json()
+
+      // Surface real API errors
+      if (!res.ok || data.error) {
+        throw new Error(data.error?.message || data.error || `API error ${res.status}`)
+      }
+      if (data.type === 'error') {
+        throw new Error(data.error?.message || 'API returned an error')
+      }
+
       const text = data.content?.find(b => b.type === 'text')?.text || ''
+      if (!text) throw new Error('No response from AI — please try again.')
+
       let parsed = null
       try { parsed = JSON.parse(text) } catch {}
       if (!parsed) { const clean = text.replace(/```json|```/g, '').trim(); try { parsed = JSON.parse(clean) } catch {} }
-      if (!parsed) { const match = text.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/); if (match) try { parsed = JSON.parse(match[0]) } catch {} }
-      if (!parsed) throw new Error('Could not parse response')
+      if (!parsed) { const match = text.match(/\{[\s\S]*\}/); if (match) try { parsed = JSON.parse(match[0]) } catch {} }
+      if (!parsed) throw new Error('Could not parse response — please try again.')
       setResult(parsed); setUsed(true); markDemoUsed()
       generateMockups(parsed.title || 'handmade product', b64)
     } catch (err) { setResult({ error: err.message || 'Something went wrong — please try again.' }) }
@@ -266,7 +277,7 @@ export default function LandingPage({ stripeUrl }) {
       </nav>
 
       {/* HERO */}
-      <section style={{ position: 'relative', padding: '5rem 2rem 4rem', overflow: 'hidden', background: '#fff' }}>
+      <section className="hero-section" style={{ position: 'relative', padding: '5rem 2rem 4rem', overflow: 'hidden', background: '#fff' }}>
         <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none' }}>
           <div style={{ position: 'absolute', top: -120, right: -120, width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,102,196,0.1) 0%, transparent 70%)' }} />
           <div style={{ position: 'absolute', bottom: -80, left: -80, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(145,113,189,0.1) 0%, transparent 70%)' }} />
@@ -387,10 +398,11 @@ export default function LandingPage({ stripeUrl }) {
           @media(max-width:768px){
             .hero-grid{
               grid-template-columns:1fr!important;
-              gap:2rem!important;
+              gap:1.5rem!important;
             }
             .hero-left{ order: 2; }
-            .hero-right{ order: 1; }
+            .hero-right{ order: 1; margin-top: 0 !important; }
+            .hero-section{ padding: 2rem 1rem 2rem !important; }
           }
         `}</style>
       </section>
