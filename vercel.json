@@ -3,7 +3,7 @@
     { "source": "/api/generate", "destination": "/api/generate" },
     { "source": "/api/mockup", "destination": "/api/mockup" },
     { "source": "/api/webhook", "destination": "/api/webhook" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    { "source": "/((?!api/|.*\\.html$|.*\\.png$|.*\\.svg$|.*\\.ico$|.*\\.json$|.*\\.js$|.*\\.css$|.*\\.pdf$).*)", "destination": "/index.html" }
   ],
   "functions": {
     "api/mockup.js": {
