@@ -74,6 +74,7 @@ function DemoSection({ onBuy }) {
 
   const generateMockups = async (title, b64) => {
     setMockupLoading(true)
+    setMockups([])
     const generated = []
     for (const prompt of DEMO_MOCKUP_PROMPTS) {
       try {
@@ -82,8 +83,15 @@ function DemoSection({ onBuy }) {
           body: JSON.stringify({ prompt: `${prompt} The product is: ${title}. Keep the product exactly as shown.`, imageBase64: b64, mimeType: 'image/jpeg' })
         })
         const data = await res.json()
-        if (data.b64) { generated.push(`data:${data.mimeType || 'image/png'};base64,${data.b64}`); setMockups([...generated]) }
-      } catch {}
+        if (data.b64) {
+          generated.push(`data:${data.mimeType || 'image/png'};base64,${data.b64}`)
+          setMockups([...generated])
+        } else {
+          console.error('Mockup error:', data.error || 'No image returned')
+        }
+      } catch (err) {
+        console.error('Mockup fetch error:', err.message)
+      }
     }
     setMockupLoading(false)
   }
@@ -211,27 +219,25 @@ function DemoSection({ onBuy }) {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{result.keywords?.map((k, i) => <span key={i} style={pill}>{k}</span>)}</div>
               </div>
 
-              {/* Mockups */}
-              {(mockups.length > 0 || mockupLoading) && (
-                <div style={{ background: '#fff', border: '1.5px solid #f0f0f0', borderRadius: 14, padding: '1.25rem', marginBottom: 10, boxShadow: '0 2px 10px rgba(0,0,0,0.04)' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.15em', textTransform: 'uppercase', color: '#bbb', marginBottom: 10 }}>
-                    Sample Mockups {mockupLoading ? '— generating...' : `(${mockups.length}/2)`}
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                    {mockups.map((url, i) => (
-                      <div key={i} style={{ borderRadius: 10, overflow: 'hidden', aspectRatio: '1', background: '#f5f5f5' }}>
-                        <img src={url} alt={`Mockup ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      </div>
-                    ))}
-                    {mockupLoading && mockups.length < 2 && Array.from({ length: 2 - mockups.length }).map((_, i) => (
-                      <div key={i} style={{ borderRadius: 10, aspectRatio: '1', background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span className="spinner-dark" />
-                      </div>
-                    ))}
-                  </div>
-                  {!mockupLoading && <p style={{ fontSize: 11, color: '#bbb', marginTop: 8, textAlign: 'center' }}>Unlock 10 mockups per product with full access</p>}
+              {/* Mockups — always show after result */}
+              <div style={{ background: '#fff', border: '1.5px solid #f0f0f0', borderRadius: 14, padding: '1.25rem', marginBottom: 10, boxShadow: '0 2px 10px rgba(0,0,0,0.04)' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.15em', textTransform: 'uppercase', color: '#bbb', marginBottom: 10 }}>
+                  Sample Mockups {mockupLoading ? '— generating...' : mockups.length > 0 ? `(${mockups.length}/2)` : '— coming up...'}
                 </div>
-              )}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  {mockups.map((url, i) => (
+                    <div key={i} style={{ borderRadius: 10, overflow: 'hidden', aspectRatio: '1', background: '#f5f5f5' }}>
+                      <img src={url} alt={`Mockup ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                  ))}
+                  {(mockupLoading || mockups.length < 2) && Array.from({ length: 2 - mockups.length }).map((_, i) => (
+                    <div key={`sk-${i}`} style={{ borderRadius: 10, aspectRatio: '1', background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span className="spinner-dark" />
+                    </div>
+                  ))}
+                </div>
+                {!mockupLoading && mockups.length > 0 && <p style={{ fontSize: 11, color: '#bbb', marginTop: 8, textAlign: 'center' }}>Unlock 10 mockups per product with full access</p>}
+              </div>
 
               <div style={{ background: 'linear-gradient(135deg, #fff5fb, #f5f0ff)', border: '2px solid rgba(145,113,189,0.2)', borderRadius: 14, padding: '1.5rem', textAlign: 'center' }}>
                 <p style={{ fontSize: 13, color: '#888', marginBottom: 6 }}>That's your free listing ✨</p>
@@ -277,7 +283,7 @@ export default function LandingPage({ stripeUrl }) {
       </nav>
 
       {/* HERO */}
-      <section className="hero-section" style={{ position: 'relative', padding: '5rem 2rem 4rem', overflow: 'hidden', background: '#fff' }}>
+      <section className="hero-section" style={{ position: 'relative', padding: '5rem 2rem 4rem', overflow: 'visible', background: '#fff' }}>
         <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none' }}>
           <div style={{ position: 'absolute', top: -120, right: -120, width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,102,196,0.1) 0%, transparent 70%)' }} />
           <div style={{ position: 'absolute', bottom: -80, left: -80, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(145,113,189,0.1) 0%, transparent 70%)' }} />
@@ -322,12 +328,17 @@ export default function LandingPage({ stripeUrl }) {
 
           {/* Right — Image 2 style card */}
           <div style={{ position: 'relative' }} className="hero-right">
-            {/* Floating badge */}
-            <div style={{ position: 'absolute', top: -16, right: -16, zIndex: 2, background: 'linear-gradient(135deg, #FF66C4, #9171BD)', color: '#fff', borderRadius: 16, padding: '10px 16px', fontSize: 12, fontWeight: 700, boxShadow: '0 8px 20px rgba(255,102,196,0.4)', textAlign: 'center' }}>
+            {/* Floating badge — hidden on mobile, shown on desktop */}
+            <div className="hero-badge" style={{ position: 'absolute', top: -16, right: -16, zIndex: 2, background: 'linear-gradient(135deg, #FF66C4, #9171BD)', color: '#fff', borderRadius: 16, padding: '10px 16px', fontSize: 12, fontWeight: 700, boxShadow: '0 8px 20px rgba(255,102,196,0.4)', textAlign: 'center' }}>
               ✨ 30 seconds<br /><span style={{ fontSize: 10, opacity: 0.9 }}>start to finish</span>
             </div>
 
             <div style={{ background: '#fff', borderRadius: 24, padding: '1.5rem', boxShadow: '0 20px 60px rgba(145,113,189,0.15)', border: '1.5px solid rgba(145,113,189,0.1)' }}>
+
+              {/* Mobile-only badge inside card */}
+              <div className="hero-badge-mobile" style={{ display: 'none', background: 'linear-gradient(135deg, #FF66C4, #9171BD)', color: '#fff', borderRadius: 12, padding: '8px 14px', fontSize: 12, fontWeight: 700, textAlign: 'center', marginBottom: '1rem' }}>
+                ✨ 30 seconds start to finish
+              </div>
 
               {/* Header row */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
@@ -401,8 +412,19 @@ export default function LandingPage({ stripeUrl }) {
               gap:1.5rem!important;
             }
             .hero-left{ order: 2; }
-            .hero-right{ order: 1; margin-top: 0 !important; }
-            .hero-section{ padding: 2rem 1rem 2rem !important; }
+            .hero-right{ 
+              order: 1;
+              padding-top: 0 !important;
+            }
+            .hero-section{ 
+              padding: 1.5rem 1rem 2rem !important;
+              overflow: visible !important;
+            }
+            .hero-badge{ display: none !important; }
+            .hero-badge-mobile{ display: block !important; }
+          }
+          @media(min-width:769px){
+            .hero-badge-mobile{ display: none !important; }
           }
         `}</style>
       </section>
