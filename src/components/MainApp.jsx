@@ -5,19 +5,6 @@ import { Logo } from './Logo'
 
 const PLATFORMS = ['Etsy', 'Shopify', 'Amazon Handmade', 'Own Website', 'Payhip', 'Beacons', 'TikTok Shop', 'Facebook Shop']
 
-const DEFAULT_SCENES = [
-  'professional product photo on clean white background, studio lighting, e-commerce style',
-  'lifestyle product photo on rustic wooden table with soft natural light',
-  'product displayed on marble surface with minimalist styling, overhead flat lay',
-  'cozy home setting lifestyle shot, warm bokeh background, natural window light',
-  'gift wrapping scene, product with ribbon and kraft paper, festive styling',
-  'product photo with green plants and natural props, earthy aesthetic',
-  'close-up detail shot showing texture and craftsmanship, macro photography style',
-  'product on neutral linen fabric background, soft shadows, artisan feel',
-  'outdoor lifestyle scene, natural sunlight, product in use',
-  'dark moody aesthetic, product on dark slate with dramatic side lighting',
-]
-
 const ETHNICITIES = [
   { value: 'none', label: 'No models' },
   { value: 'Black', label: 'Black' },
@@ -256,17 +243,24 @@ export default function MainApp() {
     setMockupProgress(0)
     const b64 = await toBase64(imageFile)
     const newMockups = []
-    const shuffled = [...DEFAULT_SCENES].sort(() => Math.random() - 0.5)
     const listingId = passedListingId || currentListingId
     const sleep = (ms) => new Promise(r => setTimeout(r, ms))
     let firstUploaded = false
 
-    for (let i = 0; i < shuffled.length; i++) {
-      const promptText = shuffled[i]
+    // Use the generated title/category for context if available
+    const productContext = result?.title
+      ? `This is a "${result.title}" in the category "${result.category || 'handmade product'}".`
+      : productDesc ? `Product: ${productDesc}.` : ''
+
+    const skinInstruction = skinTone !== 'none'
+      ? ` Include a ${skinTone} ${modelType} naturally interacting with or using the product.`
+      : ''
+
+    for (let i = 0; i < 10; i++) {
       try {
-        const skinInstruction = skinTone !== 'none' ? ` Include a ${skinTone} ${modelType} naturally interacting with the product.` : ''
-        const descInstruction = productDesc ? ` Product context: ${productDesc}.` : ''
-        const prompt = `Take this product and place it naturally into the following scene: ${promptText}.${descInstruction}${skinInstruction} Keep the product looking exactly as it does in the photo. Professional product photography, high quality, realistic lighting.`
+        // Let Gemini choose the scene freely — no constraints, just like AI Studio
+        const prompt = `Create a professional product lifestyle photo for this item. ${productContext}${skinInstruction} Choose a creative, unique, and appropriate scene or setting that would appeal to buyers of this specific product. Make it look like a professional product photography shoot. The product must remain exactly as it appears in the photo — do not alter it. High quality, realistic lighting, commercially viable.`
+
         const res = await fetch('/api/mockup', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt, imageBase64: b64, mimeType: 'image/jpeg' })
@@ -274,17 +268,13 @@ export default function MainApp() {
         const data = await res.json()
         if (data.b64) {
           const mockupUrl = `data:${data.mimeType || 'image/png'};base64,${data.b64}`
-          newMockups.push({ url: mockupUrl, label: promptText.split(',')[0] })
+          newMockups.push({ url: mockupUrl, label: `Mockup ${i + 1}` })
           setMockups([...newMockups])
 
-          // Upload first mockup immediately so thumbnail shows in history right away
           if (!firstUploaded && listingId) {
             firstUploaded = true
             uploadMockupToStorage(mockupUrl, listingId, 0).then(publicUrl => {
-              if (publicUrl) {
-                // Save just the first URL so thumbnail appears immediately
-                updateListingMockups(listingId, [publicUrl])
-              }
+              if (publicUrl) updateListingMockups(listingId, [publicUrl])
             })
           }
         }
@@ -292,7 +282,7 @@ export default function MainApp() {
         console.error('Mockup error:', err.message)
       }
       setMockupProgress(i + 1)
-      if (i < shuffled.length - 1) await sleep(1500)
+      if (i < 9) await sleep(1500)
     }
 
     // Upload remaining mockups and do final save with all URLs
