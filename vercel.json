@@ -2,11 +2,15 @@
   "rewrites": [
     { "source": "/api/generate", "destination": "/api/generate" },
     { "source": "/api/mockup", "destination": "/api/mockup" },
+    { "source": "/api/video", "destination": "/api/video" },
     { "source": "/api/webhook", "destination": "/api/webhook" },
     { "source": "/((?!api/|.*\\.html$|.*\\.png$|.*\\.svg$|.*\\.ico$|.*\\.json$|.*\\.js$|.*\\.css$|.*\\.pdf$).*)", "destination": "/index.html" }
   ],
   "functions": {
     "api/mockup.js": {
+      "maxDuration": 300
+    },
+    "api/video.js": {
       "maxDuration": 300
     },
     "api/generate.js": {

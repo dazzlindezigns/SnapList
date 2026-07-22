@@ -49,6 +49,9 @@ export default function MainApp() {
   const [mockupProgress, setMockupProgress] = useState(0)
   const [result, setResult] = useState(null)
   const [mockups, setMockups] = useState([])
+  const [videoUrl, setVideoUrl] = useState(null)
+  const [videoLoading, setVideoLoading] = useState(false)
+  const [videoError, setVideoError] = useState(null)
   const [copied, setCopied] = useState({})
   const [productDesc, setProductDesc] = useState('')
   const [skinTone, setSkinTone] = useState('none')
@@ -162,7 +165,10 @@ export default function MainApp() {
       price_suggestion: data.price_suggestion,
       occasion_tags: data.occasion_tags,
     })
-    setMockups((data.mockups || []).map(url => ({ url, label: '' })))
+    const urls = data.mockups || []
+    setMockups(urls.filter(u => !u.endsWith('.mp4')).map(url => ({ url, label: '' })))
+    setVideoUrl(urls.find(u => u.endsWith('.mp4')) || null)
+    setVideoLoading(false); setVideoError(null)
     setCurrentListingId(id)
     clearImages()
     setShowHistory(false)
@@ -178,6 +184,7 @@ export default function MainApp() {
   const handleReset = () => {
     clearImages(); setResult(null)
     setMockups([]); setMockupProgress(0); setCopied({})
+    setVideoUrl(null); setVideoLoading(false); setVideoError(null)
     setProductDesc(''); setSkinTone('none'); setModelType('woman')
     setListingLoading(false); setMockupLoading(false)
     setCurrentListingId(null)
@@ -248,12 +255,60 @@ export default function MainApp() {
       setResult(parsed)
       const saved = await saveListing({ ...parsed, platform }, [])
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200)
-      return saved?.id || null
+      return saved ? { id: saved.id, title: parsed.title, category: parsed.category } : null
     } catch (err) {
       setResult({ error: err.message || 'Something went wrong — please try again.' })
       return null
     } finally {
       setListingLoading(false)
+    }
+  }
+
+  const generateVideo = async (listingId, title) => {
+    if (!images.length || !listingId) return
+    setVideoLoading(true); setVideoUrl(null); setVideoError(null)
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms))
+    try {
+      const b64 = await toBase64(images[0].file)
+      const context = title ? `The product is "${title}".`
+        : productDesc ? `The product is: ${productDesc}.` : ''
+      const prompt = `Create a short, professional product showcase video for this item. ${context} Slow, cinematic camera movement around the product in an elegant, softly lit scene that matches the product's style. The product must remain exactly as it appears in the reference photo — do not alter it. Gentle, uplifting background music. Commercial quality, perfect for social media.`
+
+      const startRes = await fetch('/api/video', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'start', prompt, imageBase64: b64, mimeType: 'image/jpeg' })
+      })
+      const startData = await startRes.json()
+      if (!startData.operation) throw new Error(startData.error || 'Could not start video generation')
+
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) throw new Error('Not signed in')
+      const path = `${session.user.id}/${listingId}/video.mp4`
+
+      // Poll every 10s, up to ~6 minutes
+      for (let i = 0; i < 36; i++) {
+        await sleep(10000)
+        const res = await fetch('/api/video', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'status', operation: startData.operation, path, accessToken: session.access_token })
+        })
+        const data = await res.json()
+        if (data.error) throw new Error(data.error)
+        if (data.done && data.url) {
+          setVideoUrl(data.url)
+          // Persist alongside mockups (video URL ends in .mp4 so it can be told apart)
+          const { data: current } = await supabase.from('listings').select('mockups').eq('id', listingId).single()
+          const urls = [...(current?.mockups || []).filter(u => u !== data.url), data.url]
+          await updateListingMockups(listingId, urls)
+          setVideoLoading(false)
+          return
+        }
+      }
+      throw new Error('Video is taking longer than expected — please try again')
+    } catch (err) {
+      console.error('Video error:', err.message)
+      setVideoError(err.message)
+      setVideoLoading(false)
     }
   }
 
@@ -296,7 +351,7 @@ export default function MainApp() {
           if (!firstUploaded && listingId) {
             firstUploaded = true
             uploadMockupToStorage(mockupUrl, listingId, 0).then(publicUrl => {
-              if (publicUrl) updateListingMockups(listingId, [publicUrl])
+              if (publicUrl) updateListingMockups(listingId, videoUrl ? [publicUrl, videoUrl] : [publicUrl])
             })
           }
         }
@@ -312,10 +367,12 @@ export default function MainApp() {
       const uploadResults = await Promise.all(
         newMockups.slice(1).map((m, i) => uploadMockupToStorage(m.url, listingId, i + 1))
       )
-      // Get first URL from DB (already saved), combine with rest
+      // Get first URL from DB (already saved), combine with rest — keep any video (.mp4) at the end
       const { data: current } = await supabase.from('listings').select('mockups').eq('id', listingId).single()
-      const firstUrl = current?.mockups?.[0]
-      const allUrls = [firstUrl, ...uploadResults].filter(Boolean)
+      const existing = current?.mockups || []
+      const firstUrl = existing.find(u => !u.endsWith('.mp4'))
+      const videoUrls = existing.filter(u => u.endsWith('.mp4'))
+      const allUrls = [firstUrl, ...uploadResults, ...videoUrls].filter(Boolean)
       if (allUrls.length > 0) {
         await updateListingMockups(listingId, allUrls)
       }
@@ -376,8 +433,8 @@ export default function MainApp() {
     >
       {/* Thumbnail */}
       <div style={{ width: 44, height: 44, borderRadius: 8, overflow: 'hidden', background: '#f0ecfa', flexShrink: 0 }}>
-        {item.mockups?.[0]
-          ? <img src={item.mockups[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        {item.mockups?.find(u => !u.endsWith('.mp4'))
+          ? <img src={item.mockups.find(u => !u.endsWith('.mp4'))} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>✨</div>
         }
       </div>
@@ -552,9 +609,12 @@ export default function MainApp() {
               </div>
 
               <button
-                onClick={async () => { 
-                  const listingId = await generateListing()
-                  if (listingId) generateMockups(true, listingId)
+                onClick={async () => {
+                  const saved = await generateListing()
+                  if (saved?.id) {
+                    generateVideo(saved.id, saved.title)
+                    generateMockups(true, saved.id)
+                  }
                 }}
                 disabled={listingLoading || mockupLoading}
                 style={{
@@ -571,7 +631,7 @@ export default function MainApp() {
               >
                 {listingLoading ? <><span className="spinner" />Generating listing...</>
                   : mockupLoading ? <><span className="spinner" />Mockups ({mockupProgress}/10)...</>
-                  : <>✨ Generate Listing + Mockups</>}
+                  : <>✨ Generate Listing + Mockups + Video</>}
               </button>
 
               {saving && <p style={{ fontSize: 11, color: '#bbb', textAlign: 'center', marginTop: 6 }}>Saving...</p>}
@@ -611,6 +671,47 @@ export default function MainApp() {
                   borderRadius: 12, color: '#9171BD', fontFamily: "'Plus Jakarta Sans', sans-serif",
                   fontSize: 13, fontWeight: 700, cursor: 'pointer'
                 }}>🖼️ Generate 10 more mockups</button>
+              )}
+            </div>
+          )}
+
+          {/* Product video */}
+          {(videoUrl || videoLoading || videoError) && (
+            <div style={{ marginTop: '1.5rem' }}>
+              <p style={s.secLabel}>Product Video{videoLoading ? ' — creating (1–2 min)...' : ''}</p>
+
+              {videoLoading && (
+                <div style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  gap: 10, minHeight: 160, borderRadius: 14, border: '1.5px solid #f0f0f0',
+                  background: '#fff', boxShadow: '0 2px 10px rgba(0,0,0,0.04)', padding: '1.5rem'
+                }}>
+                  <span className="spinner-dark" style={{ width: 26, height: 26 }} />
+                  <p style={{ fontSize: 12, color: '#bbb', textAlign: 'center', lineHeight: 1.6 }}>
+                    🎬 Directing your product video...<br />This takes a minute or two — your mockups will keep generating.
+                  </p>
+                </div>
+              )}
+
+              {videoError && (
+                <div style={{ borderRadius: 14, border: '1.5px solid rgba(255,102,196,0.3)', background: 'rgba(255,102,196,0.05)', padding: '1rem' }}>
+                  <p style={{ fontSize: 12, color: '#cc44a0', marginBottom: 8 }}>{videoError}</p>
+                  {currentListingId && (
+                    <button onClick={() => generateVideo(currentListingId, result?.title)} style={{
+                      padding: '8px 14px', background: 'rgba(145,113,189,0.07)', border: '1.5px solid rgba(145,113,189,0.2)',
+                      borderRadius: 10, color: '#9171BD', fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      fontSize: 12, fontWeight: 700, cursor: 'pointer'
+                    }}>🎬 Retry video</button>
+                  )}
+                </div>
+              )}
+
+              {videoUrl && (
+                <div style={{ borderRadius: 14, overflow: 'hidden', border: '1.5px solid #f0f0f0', background: '#000', boxShadow: '0 2px 10px rgba(0,0,0,0.04)', position: 'relative' }}>
+                  <video src={videoUrl} controls playsInline style={{ width: '100%', display: 'block', maxHeight: 420 }} />
+                  <a href={videoUrl} download="product-video.mp4" target="_blank" rel="noopener noreferrer"
+                    style={{ position: 'absolute', top: 8, right: 8, fontSize: 11, background: 'rgba(145,113,189,0.85)', color: '#fff', padding: '4px 10px', borderRadius: 6, textDecoration: 'none', fontWeight: 700 }}>↓ Download</a>
+                </div>
               )}
             </div>
           )}
