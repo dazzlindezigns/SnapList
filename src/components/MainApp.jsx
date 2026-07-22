@@ -5,6 +5,8 @@ import { Logo } from './Logo'
 
 const PLATFORMS = ['Etsy', 'Shopify', 'Amazon Handmade', 'Own Website', 'Payhip', 'Beacons', 'TikTok Shop', 'Facebook Shop']
 
+const MAX_IMAGES = 5
+
 const ETHNICITIES = [
   { value: 'none', label: 'No models' },
   { value: 'Black', label: 'Black' },
@@ -39,8 +41,7 @@ function timeAgo(dateStr) {
 
 export default function MainApp() {
   const navigate = useNavigate()
-  const [image, setImage] = useState(null)
-  const [imageFile, setImageFile] = useState(null)
+  const [images, setImages] = useState([]) // [{ file, url }]
   const [platform, setPlatform] = useState('Etsy')
   const [drag, setDrag] = useState(false)
   const [listingLoading, setListingLoading] = useState(false)
@@ -163,26 +164,43 @@ export default function MainApp() {
     })
     setMockups((data.mockups || []).map(url => ({ url, label: '' })))
     setCurrentListingId(id)
-    setImage(null)
-    setImageFile(null)
+    clearImages()
     setShowHistory(false)
     // Scroll to result on mobile
     setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
   }
 
+  const clearImages = () => {
+    setImages(prev => { prev.forEach(img => URL.revokeObjectURL(img.url)); return [] })
+    if (fileRef.current) fileRef.current.value = ''
+  }
+
   const handleReset = () => {
-    setImage(null); setImageFile(null); setResult(null)
+    clearImages(); setResult(null)
     setMockups([]); setMockupProgress(0); setCopied({})
     setProductDesc(''); setSkinTone('none'); setModelType('woman')
     setListingLoading(false); setMockupLoading(false)
     setCurrentListingId(null)
+  }
+
+  const handleFiles = (fileList) => {
+    const files = Array.from(fileList || []).filter(f => f.type.startsWith('image/'))
+    if (!files.length) return
+    setImages(prev => {
+      const room = MAX_IMAGES - prev.length
+      const added = files.slice(0, room).map(f => ({ file: f, url: URL.createObjectURL(f) }))
+      return [...prev, ...added]
+    })
+    setResult(null); setMockups([]); setCurrentListingId(null)
     if (fileRef.current) fileRef.current.value = ''
   }
 
-  const handleFile = (file) => {
-    if (!file || !file.type.startsWith('image/')) return
-    setImageFile(file); setImage(URL.createObjectURL(file))
-    setResult(null); setMockups([]); setCurrentListingId(null)
+  const removeImage = (index) => {
+    setImages(prev => {
+      const target = prev[index]
+      if (target) URL.revokeObjectURL(target.url)
+      return prev.filter((_, i) => i !== index)
+    })
   }
 
   const toBase64 = (file) => new Promise((res, rej) => {
@@ -202,18 +220,21 @@ export default function MainApp() {
   })
 
   const generateListing = async () => {
-    if (!imageFile) return
+    if (!images.length) return
     setListingLoading(true); setResult(null)
     try {
-      const b64 = await toBase64(imageFile)
+      const b64s = await Promise.all(images.map(img => toBase64(img.file)))
+      const imageIntro = b64s.length > 1
+        ? `Analyze these ${b64s.length} product images (all showing the same product from different angles)`
+        : 'Analyze this product image'
       const res = await fetch('/api/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-6', max_tokens: 1000,
           system: 'You are a product listing expert. You ONLY respond with valid JSON. No markdown, no backticks, no explanation.',
           messages: [{ role: 'user', content: [
-            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } },
-            { type: 'text', text: `Analyze this product image and generate an optimized listing for ${platform}.${productDesc ? ` Additional context: ${productDesc}.` : ''} Respond with ONLY this JSON: {"title":"SEO title under 140 chars","description":"3 paragraphs","keywords":["kw1","kw2","kw3","kw4","kw5","kw6","kw7","kw8","kw9","kw10","kw11","kw12","kw13"],"category":"category","price_suggestion":"$XX-$XX","occasion_tags":["tag1","tag2","tag3","tag4","tag5"]}` }
+            ...b64s.map(b64 => ({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } })),
+            { type: 'text', text: `${imageIntro} and generate an optimized listing for ${platform}.${productDesc ? ` Additional context: ${productDesc}.` : ''} Respond with ONLY this JSON: {"title":"SEO title under 140 chars","description":"3 paragraphs","keywords":["kw1","kw2","kw3","kw4","kw5","kw6","kw7","kw8","kw9","kw10","kw11","kw12","kw13"],"category":"category","price_suggestion":"$XX-$XX","occasion_tags":["tag1","tag2","tag3","tag4","tag5"]}` }
           ]}]
         })
       })
@@ -237,11 +258,11 @@ export default function MainApp() {
   }
 
   const generateMockups = async (reset = true, passedListingId = null) => {
-    if (!imageFile) return
+    if (!images.length) return
     setMockupLoading(true)
     if (reset) setMockups([])
     setMockupProgress(0)
-    const b64 = await toBase64(imageFile)
+    const b64s = await Promise.all(images.map(img => toBase64(img.file)))
     const newMockups = []
     const listingId = passedListingId || currentListingId
     const sleep = (ms) => new Promise(r => setTimeout(r, ms))
@@ -259,11 +280,12 @@ export default function MainApp() {
     for (let i = 0; i < 10; i++) {
       try {
         // Let Gemini choose the scene freely — no constraints, just like AI Studio
-        const prompt = `Create a professional product lifestyle photo for this item. ${productContext}${skinInstruction} Choose a creative, unique, and appropriate scene or setting that would appeal to buyers of this specific product. Make it look like a professional product photography shoot. The product must remain exactly as it appears in the photo — do not alter it. High quality, realistic lighting, commercially viable.`
+        const refNote = b64s.length > 1 ? ` The ${b64s.length} reference photos all show the same product from different angles.` : ''
+        const prompt = `Create a professional product lifestyle photo for this item.${refNote} ${productContext}${skinInstruction} Choose a creative, unique, and appropriate scene or setting that would appeal to buyers of this specific product. Make it look like a professional product photography shoot. The product must remain exactly as it appears in the reference photo(s) — do not alter it. High quality, realistic lighting, commercially viable.`
 
         const res = await fetch('/api/mockup', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt, imageBase64: b64, mimeType: 'image/jpeg' })
+          body: JSON.stringify({ prompt, imagesBase64: b64s, mimeType: 'image/jpeg' })
         })
         const data = await res.json()
         if (data.b64) {
@@ -438,35 +460,55 @@ export default function MainApp() {
 
         {/* LEFT PANEL — upload + controls */}
         <div>
-          <p style={s.secLabel}>Your Product Photo</p>
+          <p style={s.secLabel}>Your Product Photos {images.length > 0 && <span style={{ color: '#9171BD' }}>({images.length}/{MAX_IMAGES})</span>}</p>
           <div
             style={{
               border: `2px dashed ${drag ? '#9171BD' : 'rgba(145,113,189,0.25)'}`,
-              borderRadius: 18, padding: '1.5rem',
+              borderRadius: 18, padding: images.length > 0 ? '1rem' : '1.5rem',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: '1rem', cursor: 'pointer', minHeight: 180,
+              gap: '1rem', cursor: 'pointer', minHeight: images.length > 0 ? 0 : 180,
               background: drag ? 'rgba(145,113,189,0.05)' : '#fff',
               transition: 'all .2s', boxShadow: '0 4px 20px rgba(0,0,0,0.06)'
             }}
             onDragOver={e => { e.preventDefault(); setDrag(true) }}
             onDragLeave={() => setDrag(false)}
-            onDrop={e => { e.preventDefault(); setDrag(false); handleFile(e.dataTransfer.files[0]) }}
+            onDrop={e => { e.preventDefault(); setDrag(false); handleFiles(e.dataTransfer.files) }}
             onClick={() => fileRef.current.click()}
           >
-            <input ref={fileRef} type="file" accept="image/*" onChange={e => handleFile(e.target.files[0])} style={{ display: 'none' }} />
-            {image
-              ? <img src={image} alt="Product" style={{ width: '100%', borderRadius: 12, objectFit: 'cover', maxHeight: 220 }} />
+            <input ref={fileRef} type="file" accept="image/*" multiple onChange={e => handleFiles(e.target.files)} style={{ display: 'none' }} />
+            {images.length > 0
+              ? <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, width: '100%' }}>
+                  {images.map((img, i) => (
+                    <div key={img.url} style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', aspectRatio: '1', background: '#f5f5f5', border: i === 0 ? '2px solid #9171BD' : '1.5px solid #f0f0f0' }}>
+                      <img src={img.url} alt={`Product ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      {i === 0 && (
+                        <span style={{ position: 'absolute', bottom: 4, left: 4, fontSize: 9, fontWeight: 700, background: 'rgba(145,113,189,0.9)', color: '#fff', padding: '2px 6px', borderRadius: 4, letterSpacing: '.05em', textTransform: 'uppercase' }}>Main</span>
+                      )}
+                      <button
+                        onClick={e => { e.stopPropagation(); removeImage(i) }}
+                        title="Remove photo"
+                        style={{ position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: '50%', background: 'rgba(0,0,0,0.55)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 11, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                      >✕</button>
+                    </div>
+                  ))}
+                  {images.length < MAX_IMAGES && (
+                    <div style={{ borderRadius: 10, aspectRatio: '1', border: '2px dashed rgba(145,113,189,0.3)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, color: '#9171BD', background: 'rgba(145,113,189,0.04)' }}>
+                      <span style={{ fontSize: 20, fontWeight: 700 }}>+</span>
+                      <span style={{ fontSize: 10, fontWeight: 700 }}>Add photo</span>
+                    </div>
+                  )}
+                </div>
               : <>
                   <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg,rgba(145,113,189,0.12),rgba(255,102,196,0.08))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>📸</div>
                   <p style={{ fontSize: 14, color: '#888', textAlign: 'center', lineHeight: 1.65 }}>
                     <strong style={{ color: '#9171BD' }}>Tap to upload</strong> or drag & drop<br />
-                    <span style={{ fontSize: 12, color: '#bbb' }}>JPG, PNG, WEBP</span>
+                    <span style={{ fontSize: 12, color: '#bbb' }}>JPG, PNG, WEBP · up to {MAX_IMAGES} photos</span>
                   </p>
                 </>
             }
           </div>
 
-          {image && (
+          {images.length > 0 && (
             <div style={{ marginTop: '1.25rem' }}>
               {/* Product description */}
               <div style={{ marginBottom: '1rem' }}>

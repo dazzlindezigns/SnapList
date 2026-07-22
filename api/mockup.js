@@ -12,7 +12,16 @@ export default async function handler(req, res) {
   const apiKey = process.env.GOOGLE_AI_API_KEY
   if (!apiKey) return res.status(500).json({ error: 'API key not configured' })
 
-  const { prompt, imageBase64, mimeType = 'image/jpeg' } = req.body
+  const { prompt, imageBase64, imagesBase64, mimeType = 'image/jpeg' } = req.body
+
+  // Accept either a single image (imageBase64) or multiple (imagesBase64)
+  const imageList = Array.isArray(imagesBase64) && imagesBase64.length > 0
+    ? imagesBase64
+    : (imageBase64 ? [imageBase64] : [])
+
+  if (imageList.length === 0) {
+    return res.status(400).json({ error: 'No image provided' })
+  }
 
   try {
     const response = await fetch(
@@ -23,7 +32,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           contents: [{
             parts: [
-              { inline_data: { mime_type: mimeType, data: imageBase64 } },
+              ...imageList.map(data => ({ inline_data: { mime_type: mimeType, data } })),
               { text: prompt }
             ]
           }],
